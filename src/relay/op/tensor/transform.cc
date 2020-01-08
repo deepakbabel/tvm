@@ -2720,5 +2720,61 @@ RELAY_REGISTER_OP("one_hot")
 .set_attr<FTVMCompute>("FTVMCompute", OneHotCompute)
 .set_attr<TOpPattern>("TOpPattern", kOutEWiseFusable);
 
+//randomuniform operator
+TVM_REGISTER_NODE_TYPE(RandomUniformAttrs);
+
+bool RandomUniformRel(  const Array<Type>& types,
+                        int num_inputs,
+                        const Attrs& raw_attrs,
+                        const TypeReporter& reporter) {
+  
+  CHECK_EQ(types.size(), 4);
+  const RandomUniformAttrs* attrs = raw_attrs.as<RandomUniformAttrs>();  
+  reporter->Assign(types[3], TensorTypeNode::make(attrs->shape, attrs->dtype));
+  return true;
+}
+
+Array<Tensor> RandomUniformCompute( const Attrs& attrs,
+                                    const Array<Tensor>& inputs,
+                                    const Type& out_type,
+                                    const Target& target) {
+  const auto* out_ttype = out_type.as<TensorTypeNode>();    
+  const RandomUniformAttrs* param = attrs.as<RandomUniformAttrs>();
+  CHECK(param != nullptr);
+  return Array<Tensor> {
+    topi::random_uniform(param->shape, inputs[1](), inputs[2](), param->dtype,
+    param->seed, param->name)
+  };
+  
+}
+
+Expr MakeRandomUniform( Array<IndexExpr> shape,
+                        Expr minval,
+                        Expr maxval,
+                        DataType dtype,
+                        int seed,
+                        std::string name) {
+  auto attrs = make_node<RandomUniformAttrs>();
+  attrs->shape = std::move(shape);  
+  attrs->dtype = std::move(dtype);
+  attrs->seed = seed;
+  attrs->name = std::move(name);
+  static const Op& op = Op::Get("random_uniform");
+  return CallNode::make(op, {minval, maxval}, Attrs(attrs), {});
+}
+
+TVM_REGISTER_API("relay.op._make.random_uniform")
+.set_body_typed(MakeRandomUniform);
+
+RELAY_REGISTER_OP("random_uniform")
+.describe(R"code(Returns evenly spaced values within a given interval.
+
+)code" TVM_ADD_FILELINE)
+.set_attrs_type<RandomUniformAttrs>()
+.set_num_inputs(2)
+.set_support_level(3)
+//.add_type_rel("RandomUniform", RandomUniformRel)
+.set_attr<FTVMCompute>("FTVMCompute", RandomUniformCompute)
+.set_attr<TOpPattern>("TOpPattern", kInjective);
 }  // namespace relay
 }  // namespace tvm

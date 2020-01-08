@@ -60,6 +60,7 @@ _reg.register_schedule("_contrib_reverse_reshape", schedule_injective)
 _reg.register_schedule("gather_nd", schedule_injective)
 _reg.register_schedule("sequence_mask", schedule_injective)
 _reg.register_schedule("one_hot", schedule_injective)
+_reg.register_schedule("random_uniform", schedule_injective)
 
 
 # layout_transform

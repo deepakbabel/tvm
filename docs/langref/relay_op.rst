@@ -1,4 +1,4 @@
-..  Licensed to the Apache Software Foundation (ASF) under one
+    ..  Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
     distributed with this work for additional information
     regarding copyright ownership.  The ASF licenses this file
@@ -121,6 +121,7 @@ This level enables additional math and transform operators.
    tvm.relay.repeat
    tvm.relay.tile
    tvm.relay.reverse
+   tvm.relay.random_uniform
 
 
 **Level 4: Broadcast and Reductions**
@@ -290,6 +291,7 @@ Level 3 Definitions
 .. autofunction:: tvm.relay.repeat
 .. autofunction:: tvm.relay.tile
 .. autofunction:: tvm.relay.reverse
+.. autofunction:: tvm.relay.random_uniform
 
 
 Level 4 Definitions

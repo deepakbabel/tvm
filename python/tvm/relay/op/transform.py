@@ -860,3 +860,56 @@ def one_hot(indices, on_value, off_value, depth, axis, dtype):
              [0, 0, 1]]
     """
     return _make.one_hot(indices, on_value, off_value, depth, axis, dtype)
+
+def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=None):
+    """Return pseudo random numbers from a uniform distribution within a given interval[minval,maxval).
+
+    .. note::
+        Similar to ``numpy.arange``, when only one argument is given, it is used
+        as `stop` instead of `start` while `start` takes default value 0.
+
+        Warning: Undefined behavior when dtype is incompatible with start/stop/step.
+        It could lead to different results compared to numpy, MXNet, pytorch, etc.
+
+    Parameters
+    ----------
+    start : tvm.Expr, optional
+        Start of interval. The interval includes this value. The default start
+        value is 0.
+
+    stop : tvm.Expr
+        Stop of interval. The interval does not include this value.
+
+    step : tvm.Expr, optional
+        Spacing between values. The default step size is 1.
+
+    dtype : str, optional
+        The target data type.
+
+    Returns
+    -------
+    result : relay.Expr
+        The resulting tensor.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        relay.arange(5) = [0, 1, 2, 3, 4]
+        relay.arange(1, 5) = [1, 2, 3, 4]
+        relay.arange(1, 5, 1.5) = [1, 2.5, 4]
+    """
+    if dtype is None:
+        dtype = "float32"
+
+    if maxval is None:
+        if (dtype.find("float") != -1):
+            maxval = const(1, dtype)
+        else:
+            print("maxval should be specified for integer datatype")
+
+    if minval is None:
+        minval = 0
+        minval = const(0, dtype=dtype)
+
+    return _make.random_uniform(shape, minval, maxval, dtype, seed, name)

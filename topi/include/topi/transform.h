@@ -37,6 +37,8 @@
 #include "tvm/operation.h"
 #include "tvm/expr_operator.h"
 #include "tvm/data_layout.h"
+#include <iostream>
+using namespace std;
 
 namespace topi {
 using namespace tvm;
@@ -1299,6 +1301,27 @@ inline Tensor one_hot(const Tensor& indices,
     auto idx = iter_vars[true_axis];
     return ir::Select::make(indices(indices_indices) == idx, on_value_cast, off_value_cast);
   }, name, tag);
+}
+
+//randomuniform operator
+inline Array<Tensor> random_uniform(const Array<Expr>& shape,
+                        const Expr& minval,
+                        const Expr& maxval,
+                        Type dtype,
+                        Integer seed,                        
+                        std::string name = "T_random_uniform",
+                        std::string tag = kInjective) {
+  Array<Tensor> tr;
+  return tr;
+//    return compute({shape.size()}, [&](const Array<Var>& indices) {
+//    return tvm::cast(dtype, minval + 1 * indices[0]);
+//  }, name, tag);
+//  Expr num_elem = tvm::cast(tvm::Int(32), tvm::ceil(
+//      tvm::cast(tvm::Float(32), stop - start) / step));
+//  Array<Expr> shape;
+//  return compute({num_elem}, [&](const Array<Var>& indices) {
+//    return tvm::cast(dtype, start + step * indices[0]);
+//  }, name, tag);
 }
 
 }  // namespace topi
