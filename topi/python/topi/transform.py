@@ -21,6 +21,7 @@ import tvm
 import topi
 from . import cpp
 from . import tag
+from tvm.contrib import random
 from .util import within_index, make_idx
 
 
@@ -455,6 +456,54 @@ def arange(start, stop=None, step=1, dtype="float32"):
         start = 0
     return cpp.arange(start, stop, step, dtype)
 
+def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=None):
+    """Creates a tensor with evenly spaced values within a given interval.
+
+    Parameters
+    ----------
+    start : tvm.Expr, optional
+        Start of interval. The interval includes this value. The default start
+        value is 0.
+
+    stop : tvm.Expr
+        Stop of interval. The interval does not include this value.
+
+    step : tvm.Expr, optional
+        Spacing between values. The default step size is 1.
+
+    dtype : str, optional
+        The target data type.
+
+    Returns
+    -------
+    result : tvm.Tensor
+        The resulting tensor.
+    """
+    if dtype is None:
+        dtype = "float32"
+
+    if maxval is None:
+        if (dtype.find("float") != -1):
+            maxval = 1.0
+        else:
+            print("maxval should be specified for integer datatype")
+
+    if minval is None:
+        if (dtype.find("float") != -1):
+            minval = 0.0
+        else:
+            minval = 0
+    target = tvm.target.current_target()
+    print("222222222222222222222")
+    # if "random" in target:
+    if target is not None:
+        print("33333333333333333333333")
+        print("going into python random.uniform")
+        return random.uniform(minval, maxval, shape)
+    else:
+        print("44444444444444444444")
+        print("going into c++ random.uniform")
+        return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
 
 def repeat(a, repeats, axis):
     """Repeats elements of an array.

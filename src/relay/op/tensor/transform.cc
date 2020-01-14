@@ -2734,14 +2734,14 @@ bool RandomUniformRel(  const Array<Type>& types,
   return true;
 }
 
-Array<Tensor> RandomUniformCompute( const Attrs& attrs,
+Tensor RandomUniformCompute( const Attrs& attrs,
                                     const Array<Tensor>& inputs,
                                     const Type& out_type,
                                     const Target& target) {
-  const auto* out_ttype = out_type.as<TensorTypeNode>();    
+  //const auto* out_ttype = out_type.as<TensorTypeNode>();    
   const RandomUniformAttrs* param = attrs.as<RandomUniformAttrs>();
   CHECK(param != nullptr);
-  return Array<Tensor> {
+  return Tensor {
     topi::random_uniform(param->shape, inputs[1](), inputs[2](), param->dtype,
     param->seed, param->name)
   };
@@ -2774,7 +2774,7 @@ RELAY_REGISTER_OP("random_uniform")
 .set_num_inputs(2)
 .set_support_level(3)
 //.add_type_rel("RandomUniform", RandomUniformRel)
-.set_attr<FTVMCompute>("FTVMCompute", RandomUniformCompute)
+.set_attr<FTVMCompute1>("FTVMCompute1", RandomUniformCompute)
 .set_attr<TOpPattern>("TOpPattern", kInjective);
 }  // namespace relay
 }  // namespace tvm

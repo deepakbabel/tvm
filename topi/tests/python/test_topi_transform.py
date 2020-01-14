@@ -548,6 +548,34 @@ def verify_one_hot(indices_shape, depth, on_value, off_value, axis, dtype):
     for device in get_all_backend():
         check_device(device)
 
+def verify_random_uniform(shape, minval, maxval, dtype, seed, name):
+    A = topi.random_uniform(shape, minval, maxval, dtype, seed, name)
+    # m = 1024
+    # n = 1024
+    # msize = shape
+    # A = topi.random.uniform(minval, maxval, size=msize)
+    s = tvm.create_schedule(A.op)
+    # s = tvm.create_schedule(A)
+
+    def verify(target="llvm"):
+        if not tvm.module.enabled(target):
+            print("skip because %s is not enabled..." % target)
+            return
+        if not tvm.get_global_func("tvm.contrib.random.uniform", True):
+            print("skip because extern function is not available")
+            return
+        ctx = tvm.cpu(0)
+        f = tvm.build(s, [A], target)
+        a = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=A.dtype), ctx)
+        f(a)
+        print("555555555555555555")
+        na = a.asnumpy()
+        assert abs(np.mean(na) - 0.5) < 1e-2
+        assert abs(np.min(na) - 0.0) < 1e-3
+        assert abs(np.max(na) - 1.0) < 1e-3
+
+    verify()
+
 def test_strided_slice():
     verify_strided_slice((3, 4, 3), [0, 0, 0], [4, -5, 4], [1, -1, 2])
     verify_strided_slice((3, 4, 3), [1, 1, 0], [4, 4, 3], [2, 1, 1])
@@ -864,7 +892,11 @@ def test_one_hot():
     verify_one_hot((3, 2, 4, 5), 6, 1, 0, 1, "int32")
     verify_one_hot((3, 2, 4, 5), 6, 1.0, 0.0, 0, "float32")
 
+def test_random_uniform():
+    verify_random_uniform((1024,1024),0.0,1.0,"float32",1, "")
+
 if __name__ == "__main__":
+    test_random_uniform()
     test_strided_slice()
     test_concatenate()
     test_stack()

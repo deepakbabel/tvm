@@ -1,0 +1,76 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*!
+ * \brief External function interface to cuBLAS libraries
+ * \file cublas.h
+ */
+#ifndef TOPI_CONTRIB_RANDOM_H_
+#define TOPI_CONTRIB_RANDOM_H_
+
+#include "tvm/operation.h"
+#include "topi/detail/extern.h"
+#include <fstream>
+using namespace std;
+
+namespace topi {
+namespace contrib {
+using namespace tvm;
+using namespace topi::detail;
+/*!
+* \brief Create an op that generates pseudo random number from a uniform P.D.(Prob distrib)
+*
+* \param shape The output shape
+* \param minval The lower bound of Uniform Distribution(inclusive)
+* \param maxval The upper bound of Uniform Distribution(exclusive)
+* \param dtype  The datatype of the generated values in Uniform Distribution
+* \param seed   Seed value for the Distribution
+* \param name   Optional name parameter for the operation
+*
+* \return The output uniform P.D. tensor with filled psuedo random numbers
+*/
+inline tvm::Tensor random_uniform(const Array<Expr>& shape,
+                             const Expr& minval,
+                             const Expr& maxval,
+                             Type dtype,
+                             Integer seed,                        
+                             std::string name = "random.uniform") {
+    Tensor mydata;
+    std::string tag = kInjective;
+    ofstream f;
+    f.open("randomuniform2.txt");
+    f<<"inside new random.h file";
+    f.close();
+    Tensor lhs;
+    Tensor rhs;
+    return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
+      return call_packed({
+        Expr("tvm.contrib.random.uniform"),
+        minval,
+        maxval,
+        pack_buffer(outs[0]),
+        });
+  },name,"",{})[0];
+  // },name,tag,{})[0];  
+}
+
+}  // namespace contrib
+}  // namespace topi
+
+#endif  // TOPI_CONTRIB_CONTRIB_H_

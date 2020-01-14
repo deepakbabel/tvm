@@ -104,6 +104,30 @@ using FTVMCompute = runtime::TypedPackedFunc<
                 const Target& target)>;
 
 /*!
+ * \brief Computation description interface.
+ *
+ * \note This function have a special convention
+ *  for functions with tuple input/output.
+ *
+ *  So far we restrict tuple support to the following case:
+ *  - Function which takes a single tuple as input.
+ *  - Function which outputs a single tuple.
+ *
+ *  In both cases, the tuple is flattened as array.
+ *
+ * \param attrs The attribute of the primitive
+ * \param inputs The input tensors.
+ * \param out_type The output type information
+ &                 these are always placeholders.
+ * \return The output compute description of the operator.
+ */
+using FTVMCompute1 = runtime::TypedPackedFunc<
+  Tensor(const Attrs& attrs,
+         const Array<Tensor>& inputs,
+         const Type& out_type,
+         const Target& target)>;
+
+/*!
  * \brief Build the computation schedule for
  *  op whose root is at current op.
  *
