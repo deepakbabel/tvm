@@ -26,8 +26,6 @@
 
 #include "tvm/operation.h"
 #include "topi/detail/extern.h"
-#include <fstream>
-using namespace std;
 
 namespace topi {
 namespace contrib {
@@ -45,18 +43,14 @@ using namespace topi::detail;
 *
 * \return The output uniform P.D. tensor with filled psuedo random numbers
 */
-inline tvm::Tensor random_uniform(const Array<Expr>& shape,
-                             const Expr& minval,
-                             const Expr& maxval,
-                             Type dtype,
-                             Integer seed,                        
-                             std::string name = "random.uniform") {
-    Tensor mydata;
+inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape,
+                                  const Expr& minval,
+                                  const Expr& maxval,
+                                  Type dtype,
+                                  Integer seed,
+                                  std::string name = "random.uniform") {
+    Array<Tensor> mydata;
     std::string tag = kInjective;
-    ofstream f;
-    f.open("randomuniform2.txt");
-    f<<"inside new random.h file";
-    f.close();
     Tensor lhs;
     Tensor rhs;
     return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
@@ -66,8 +60,7 @@ inline tvm::Tensor random_uniform(const Array<Expr>& shape,
         maxval,
         pack_buffer(outs[0]),
         });
-  },name,"",{})[0];
-  // },name,tag,{})[0];  
+  },name,"",{});
 }
 
 }  // namespace contrib

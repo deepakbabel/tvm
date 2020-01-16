@@ -288,6 +288,11 @@ def schedule_concatenate(attrs, outputs, target):
     with target:
         return topi.generic.schedule_concatenate(outputs)
 
+def schedule_extern(attrs, outputs, target):
+    """Generic schedule for extern."""
+    with target:
+        return topi.generic.schedule_extern(outputs)
+
 
 __DEBUG_COUNTER__ = 0
 

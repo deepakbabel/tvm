@@ -22,6 +22,7 @@ import tvm
 from tvm import relay
 from tvm.relay import create_executor, transform
 from tvm.relay.testing import ctx_list, check_grad
+from tvm import contrib
 
 def run_infer_type(expr):
     mod = relay.Module.from_expr(expr)
@@ -687,6 +688,27 @@ def test_gather_nd():
     verify_gather_nd((3, 2, 2), (2, 2), [[0, 1], [1, 0]])
     verify_gather_nd((3, 2), (2, 2, 3), [[[0, 1, 2], [2, 0, 1]], [[0, 0, 0], [1, 1, 1]]])
 
+def test_random_uniform():
+    def verify_random_uniform(shape, minval, maxval, dtype, seed, name):
+        x = relay.random_uniform(shape, minval, maxval, dtype, seed, name)
+        # m = 1024
+        # n = 1024
+        # msize = shape
+        # A = topi.random.uniform(minval, maxval, size=msize)
+        print("1111111111..before creating schedule")
+
+        func = relay.Function([], x)
+        for target, ctx in ctx_list():
+            for kind in ["graph", "debug"]:
+                intrp = relay.create_executor(kind, ctx=ctx, target=target)
+                print("444444444444")
+                print(str(func))
+                print(x)
+                op_res = intrp.evaluate(func)()
+                print(op_res)
+        # verify()
+    verify_random_uniform((1024, 1024), 0.0, 1.0, "float32", 1, "")
+
 if __name__ == "__main__":
     test_arange()
     test_cast()
@@ -717,3 +739,4 @@ if __name__ == "__main__":
     test_tile()
     test_repeat()
     test_gather_nd()
+    test_random_uniform()

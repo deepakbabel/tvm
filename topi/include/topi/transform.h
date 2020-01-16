@@ -41,13 +41,10 @@
 #include "tvm/build_module.h"
 #include "topi/tags.h"
 #include "topi/detail/array_utils.h"
-#include <iostream>
 #include <dmlc/thread_local.h>
 #include "topi/contrib/random.h"
 #include </home/deepak/projects/neoai/tvm/src/runtime/contrib/random/mt_random_engine.cc>
 #include "topi/generic/extern.h"
-#include <fstream>
-using namespace std;
 
 namespace topi {
 using namespace tvm;
@@ -1420,38 +1417,15 @@ inline Tensor one_hot(const Tensor& indices,
   }, name, tag);
 }
 
-//randomuniform operator
-inline Tensor random_uniform(const Array<Expr>& shape,
-                                    const Expr& minval,
-                                    const Expr& maxval,
-                                    Type dtype,
-                                    Integer seed,                        
-                                    std::string name = "random.uniform"){  
-  ofstream f;
-  f.open("randomuniform.txt");
-  f<<"hi2222";
-  f.close();  
+//random uniform operator
+inline Array<Tensor> random_uniform( const Array<Expr>& shape,
+                              const Expr& minval,
+                              const Expr& maxval,
+                              Type dtype,
+                              Integer seed,
+                              std::string name = "random.uniform"){
   auto mm = topi::contrib::random_uniform(shape, minval, maxval, dtype, seed, name);
-  return mm;
-  
-  //tr = mm.as  <Array<Tensor>>;
-  // return compute(shape, std::generate_n(static_cast<Type*>(tr->data), shape.size, [&] () {
-  //           unsigned rint = 1;
-  //           return minval + maxval % (rint);
-  //         }),name,tag);
-  // return std::generate_n(static_cast<Type*>(tr->data), shape.size, [&] () {
-  //           unsigned rint = 1;
-  //           return minval + maxval % (rint);
-  //         });
-  // return compute({shape.size()}, [&](const Array<Var>& indices) {
-  //   return topi::contrib::random_uniform(shape, minval, maxval, dtype, seed, name);
-  // }, name, tag);
-//  Expr num_elem = tvm::cast(tvm::Int(32), tvm::ceil(
-//      tvm::cast(tvm::Float(32), stop - start) / step));
-//  Array<Expr> shape;
-//  return compute({num_elem}, [&](const Array<Var>& indices) {
-//    return tvm::cast(dtype, start + step * indices[0]);
-//  }, name, tag);
+  return {mm};
 }
 
 }  // namespace topi

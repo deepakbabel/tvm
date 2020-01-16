@@ -29,6 +29,7 @@ from ...api import convert
 schedule_injective = _reg.schedule_injective
 schedule_broadcast = _reg.schedule_injective
 schedule_concatenate = _reg.schedule_concatenate
+schedule_extern = _reg.schedule_extern
 
 
 _reg.register_schedule("collapse_sum_like", _schedule_reduce)
@@ -60,7 +61,7 @@ _reg.register_schedule("_contrib_reverse_reshape", schedule_injective)
 _reg.register_schedule("gather_nd", schedule_injective)
 _reg.register_schedule("sequence_mask", schedule_injective)
 _reg.register_schedule("one_hot", schedule_injective)
-_reg.register_schedule("random_uniform", schedule_injective)
+_reg.register_schedule("random_uniform", schedule_extern)
 
 
 # layout_transform

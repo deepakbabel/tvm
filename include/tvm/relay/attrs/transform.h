@@ -325,13 +325,13 @@ struct RandomUniformAttrs : public tvm::AttrsNode<RandomUniformAttrs> {
   Array<IndexExpr> shape;
   Expr minval;
   Expr maxval;
-  DataType dtype;  
+  DataType dtype;
   int seed;
   std::string name;
 
   TVM_DECLARE_ATTRS(RandomUniformAttrs, "relay.attrs.RandomUniformAttrs") {
     TVM_ATTR_FIELD(shape)
-        .describe("A 1-D integer array. The shape of the output tensor.");
+        .describe("A 1-D array. The shape of the output tensor.");
     // TVM_ATTR_FIELD(minval).set_default(make_const(Float(32), 0))
     TVM_ATTR_FIELD(minval).describe("The lower bound on the range of random values to generate. Defaults to 0.");
     if(dtype.is_float()) {
@@ -349,7 +349,7 @@ struct RandomUniformAttrs : public tvm::AttrsNode<RandomUniformAttrs> {
     TVM_ATTR_FIELD(seed).set_default(0)
         .describe("Integer. Used to create a random seed for the distribution.");
     //TVM_ATTR_FIELD(name).set_default("")
-    TVM_ATTR_FIELD(name).set_default("")
+    TVM_ATTR_FIELD(name).set_default("random.uniform")
         .describe("name of the operation. Optional field.");
   }
 };  // struct RandomUniformAttrs

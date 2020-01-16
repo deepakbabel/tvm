@@ -907,9 +907,14 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
             maxval = const(1, dtype)
         else:
             print("maxval should be specified for integer datatype")
+    else:
+        maxval = const(maxval, dtype=dtype)
 
     if minval is None:
         minval = 0
         minval = const(0, dtype=dtype)
+    else:
+        minval = const(minval, dtype=dtype)
+    print("now calling make function............")
 
     return _make.random_uniform(shape, minval, maxval, dtype, seed, name)

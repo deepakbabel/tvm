@@ -30,8 +30,6 @@
 #else
 #include "sgx_random_engine.cc"
 #endif
-#include <fstream>
-using namespace std;
 
 #define DLPACK_INTEGER_TYPE_SWITCH(type, DType, ...)    \
   if (type.code == kDLInt && type.bits == 32) {         \
@@ -109,11 +107,7 @@ TVM_REGISTER_GLOBAL("tvm.contrib.random.randint")
 
 
 TVM_REGISTER_GLOBAL("tvm.contrib.random.uniform")
-.set_body([](TVMArgs args, TVMRetValue *ret) {
-    ofstream f1;
-    f1.open("randomuniform1.txt");
-    f1<<"inside random.cc inside contrib folder";
-    f1.close();
+.set_body([](TVMArgs args, TVMRetValue *ret) {    
     RandomThreadLocalEntry *entry = RandomThreadLocalEntry::ThreadLocal();    
     double low = args[0];
     double high = args[1];    

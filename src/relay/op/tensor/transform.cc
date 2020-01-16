@@ -39,6 +39,7 @@
 #include "../../pass/alter_op_layout.h"
 #include "../../pass/pattern_util.h"
 #include "transform.h"
+#include <fstream>
 
 namespace tvm {
 namespace relay {
@@ -2728,24 +2729,38 @@ bool RandomUniformRel(  const Array<Type>& types,
                         const Attrs& raw_attrs,
                         const TypeReporter& reporter) {
   
-  CHECK_EQ(types.size(), 4);
-  const RandomUniformAttrs* attrs = raw_attrs.as<RandomUniformAttrs>();  
-  reporter->Assign(types[3], TensorTypeNode::make(attrs->shape, attrs->dtype));
+  std::ofstream f;
+  f.open("randomuniform.txt");
+  f<<"11111";
+  f<<"num of inputs is = "<<num_inputs;
+  f<<"types size is = "<<types.size();
+  // f<<__FILE__<< " "<< __func__;
+  f.close();
+  // CHECK_EQ(types.size(), 3);
+  const RandomUniformAttrs* attrs = raw_attrs.as<RandomUniformAttrs>();
+  reporter->Assign(types[2], TensorTypeNode::make(attrs->shape, attrs->dtype));
   return true;
 }
 
-Tensor RandomUniformCompute( const Attrs& attrs,
-                                    const Array<Tensor>& inputs,
-                                    const Type& out_type,
-                                    const Target& target) {
-  //const auto* out_ttype = out_type.as<TensorTypeNode>();    
+Array<Tensor> RandomUniformCompute(const Attrs& attrs,
+                            const Array<Tensor>& inputs,
+                            const Type& out_type,
+                            const Target& target) {
+  std::ofstream f;
+  f.open("randomuniform.txt");
+  f<<"2222";
+  // f<<__FILE__<< " "<< __func__;
+  f.close();
   const RandomUniformAttrs* param = attrs.as<RandomUniformAttrs>();
   CHECK(param != nullptr);
-  return Tensor {
-    topi::random_uniform(param->shape, inputs[1](), inputs[2](), param->dtype,
+  // return Tensor { 
+  //   topi::random_uniform(param->shape, inputs[0](), inputs[1](), param->dtype,
+  //   param->seed, param->name) 
+  // };
+  return Array<Tensor> {
+    topi::random_uniform(param->shape, inputs[0](), inputs[1](), param->dtype,
     param->seed, param->name)
   };
-  
 }
 
 Expr MakeRandomUniform( Array<IndexExpr> shape,
@@ -2754,6 +2769,11 @@ Expr MakeRandomUniform( Array<IndexExpr> shape,
                         DataType dtype,
                         int seed,
                         std::string name) {
+  std::ofstream f;
+  f.open("randomuniform.txt");
+  f<<"33333";
+  // f<<__FILE__<< " "<< __func__;
+  f.close();
   auto attrs = make_node<RandomUniformAttrs>();
   attrs->shape = std::move(shape);  
   attrs->dtype = std::move(dtype);
@@ -2773,8 +2793,12 @@ RELAY_REGISTER_OP("random_uniform")
 .set_attrs_type<RandomUniformAttrs>()
 .set_num_inputs(2)
 .set_support_level(3)
-//.add_type_rel("RandomUniform", RandomUniformRel)
-.set_attr<FTVMCompute1>("FTVMCompute1", RandomUniformCompute)
-.set_attr<TOpPattern>("TOpPattern", kInjective);
+.add_type_rel("RandomUniform", RandomUniformRel)
+.set_attr<FTVMCompute>("FTVMCompute", RandomUniformCompute)
+// .set_attr<TOpPattern>("TOpPattern", kInjective);
+.set_attr<TOpPattern>("TOpPattern", kOpaque)
+.set_attr<AnyCodegenStrategy>("AnyCodegenStrategy", kVariableDimensions);
+
+
 }  // namespace relay
 }  // namespace tvm

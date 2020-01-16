@@ -548,31 +548,55 @@ def verify_one_hot(indices_shape, depth, on_value, off_value, axis, dtype):
     for device in get_all_backend():
         check_device(device)
 
+def fun1(A, shape, pdtype):
+    def check_device(device):
+        ctx = tvm.context(device, 0)
+        if not ctx.exist:
+            print("Skip because %s is not enabled" % device)
+            return
+        print("Running on target: %s" % device)
+        with tvm.target.create(device):
+            s = topi.generic.schedule_extern(A)
+            # "rocm", target_host = "llvm", name = "conv2d")
+            # s = topi.generic.schedule_injective(A)
+        # f = tvm.build(s, [A], "cpu", "llvm", device)
+        f = tvm.build(s, A, device)
+        a_nd = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=pdtype), ctx)
+        f(a_nd)
+        print(a_nd)
+        # tvm.testing.assert_allclose(a_nd.asnumpy(), a_np)
+
+    for device in get_all_backend():
+        check_device(device)
+
+
 def verify_random_uniform(shape, minval, maxval, dtype, seed, name):
     A = topi.random_uniform(shape, minval, maxval, dtype, seed, name)
+
+    return fun1(A, shape, dtype)
     # m = 1024
     # n = 1024
     # msize = shape
     # A = topi.random.uniform(minval, maxval, size=msize)
-    s = tvm.create_schedule(A.op)
-    # s = tvm.create_schedule(A)
-
-    def verify(target="llvm"):
-        if not tvm.module.enabled(target):
-            print("skip because %s is not enabled..." % target)
-            return
-        if not tvm.get_global_func("tvm.contrib.random.uniform", True):
-            print("skip because extern function is not available")
-            return
-        ctx = tvm.cpu(0)
-        f = tvm.build(s, [A], target)
-        a = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=A.dtype), ctx)
-        f(a)
-        print("555555555555555555")
-        na = a.asnumpy()
-        assert abs(np.mean(na) - 0.5) < 1e-2
-        assert abs(np.min(na) - 0.0) < 1e-3
-        assert abs(np.max(na) - 1.0) < 1e-3
+    # s = tvm.create_schedule(A.op)
+    # # s = tvm.create_schedule(A)
+    #
+    # def verify(target="llvm"):
+    #     if not tvm.module.enabled(target):
+    #         print("skip because %s is not enabled..." % target)
+    #         return
+    #     if not tvm.get_global_func("tvm.contrib.random.uniform", True):
+    #         print("skip because extern function is not available")
+    #         return
+    #     ctx = tvm.cpu(0)
+    #     f = tvm.build(s, [A], target)
+    #     a = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=A.dtype), ctx)
+    #     f(a)
+    #     na = a.asnumpy()
+    #     print(na)
+    #     assert abs(np.mean(na) - 0.5) < 1e-2
+    #     assert abs(np.min(na) - 0.0) < 1e-3
+    #     assert abs(np.max(na) - 1.0) < 1e-3
 
     verify()
 

@@ -496,14 +496,15 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
     target = tvm.target.current_target()
     print("222222222222222222222")
     # if "random" in target:
-    if target is not None:
-        print("33333333333333333333333")
-        print("going into python random.uniform")
-        return random.uniform(minval, maxval, shape)
-    else:
-        print("44444444444444444444")
-        print("going into c++ random.uniform")
-        return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
+    return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
+    # if target is not None:
+    #     print("33333333333333333333333")
+    #     print("going into python random.uniform")
+    #     return random.uniform(minval, maxval, shape)
+    # else:
+    #     print("44444444444444444444")
+    #     print("going into c++ random.uniform")
+    #     return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
 
 def repeat(a, repeats, axis):
     """Repeats elements of an array.
