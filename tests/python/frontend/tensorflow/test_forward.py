@@ -2766,6 +2766,23 @@ def test_forward_one_hot():
     _test_forward_one_hot((3, 2, 4, 5), 6, 1.0, 0.0, 0, "float32")
 
 #######################################################################
+# RandomUniform
+# -----
+
+
+def test_forward_random_uniform():
+    """test operator RandomUniform"""
+    tf.reset_default_graph()
+    tf.random_uniform((1024,1024), 1.0, 2.0, tf.float32, 0)
+    # tf.range(1, 18, 3, name="range")
+    compare_tf_with_tvm([], [], 'random_uniform:0')
+
+    """test type assignment for operator Range"""
+    tf.reset_default_graph()
+    tf.random_uniform((1024,1024), minval=-1.0, maxval=2.0, dtype=tf.float32, seed=0, name="random_uniform")
+    compare_tf_with_tvm([], [], 'random_unifrom:0')
+
+#######################################################################
 # AddN
 # ----------------------
 
@@ -2835,6 +2852,7 @@ if __name__ == '__main__':
     test_forward_left_shift()
     test_forward_truncatemod()
     test_forward_one_hot()
+    test_forward_random_uniform()
 
     # Activations
     test_forward_sigmoid()

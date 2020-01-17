@@ -1390,6 +1390,37 @@ def _add_n():
         return  _res
     return _impl
 
+def _random_uniform():
+    def _impl(inputs, attr, params):
+        print("inputs is = ", inputs)
+        print("attr is = ", attr)
+        shape = _get_param(params, inputs[0])
+        print("shape is = ",shape)
+        minval = attr.get('minval',0)
+        print(minval)
+        print("minval is = ",minval)
+        maxval = attr.get('maxval',1)
+        print("maxval is = ",maxval)
+        dtype = attr.get('dtype').name
+        print("dtype is = ",dtype)
+        seed = attr.get('seed',0)
+        print("seed is = ",seed)
+        attr['seed'] = seed
+        # seed2 = attr.get('seed2', 0)
+        # print("seed2 is = ", seed2)
+        name = attr.get('name',"random_uniform")
+        print("name is = ",name)
+        # size_splits = _get_param(params, inputs[1])
+        return AttrCvt(
+            op_name="random_uniform",
+            ignores=['seed2'],
+            extras={'shape': shape,
+                    'minval': _expr.const(minval),
+                    'maxval': _expr.const(maxval),
+                    'dtype': dtype,
+                    'seed': _expr.const(seed),
+                    'name': name})([], attr)
+    return _impl
 
 # compatible operators that do NOT require any conversion.
 _identity_list = []
@@ -1526,6 +1557,7 @@ _convert_map = {
     'Unpack'                            : _unpack(),
     'Where'                             : _where(),
     'ZerosLike'                         : AttrCvt('zeros_like'),
+    'RandomUniform'                     : _random_uniform(),
 
 }
 

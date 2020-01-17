@@ -899,6 +899,13 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         relay.arange(1, 5) = [1, 2, 3, 4]
         relay.arange(1, 5, 1.5) = [1, 2.5, 4]
     """
+    print("1111111111111111")
+    print(shape)
+    print(minval)
+    print(maxval)
+    print(dtype)
+    print(seed)
+    print(name)
     if dtype is None:
         dtype = "float32"
 

@@ -691,12 +691,6 @@ def test_gather_nd():
 def test_random_uniform():
     def verify_random_uniform(shape, minval, maxval, dtype, seed, name):
         x = relay.random_uniform(shape, minval, maxval, dtype, seed, name)
-        # m = 1024
-        # n = 1024
-        # msize = shape
-        # A = topi.random.uniform(minval, maxval, size=msize)
-        print("1111111111..before creating schedule")
-
         func = relay.Function([], x)
         for target, ctx in ctx_list():
             for kind in ["graph", "debug"]:
@@ -707,7 +701,7 @@ def test_random_uniform():
                 op_res = intrp.evaluate(func)()
                 print(op_res)
         # verify()
-    verify_random_uniform((1024, 1024), 0.0, 1.0, "float32", 1, "")
+    verify_random_uniform((1024, 1024), -3.0, 3.0, "float32", 1, "")
 
 if __name__ == "__main__":
     test_arange()
