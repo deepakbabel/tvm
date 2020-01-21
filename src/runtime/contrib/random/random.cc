@@ -110,10 +110,9 @@ TVM_REGISTER_GLOBAL("tvm.contrib.random.uniform")
 .set_body([](TVMArgs args, TVMRetValue *ret) {    
     RandomThreadLocalEntry *entry = RandomThreadLocalEntry::ThreadLocal();    
     double low = args[0];
-    double high = args[1];    
-    DLTensor* out = args[2];
-    unsigned int lseed = 1;
-    //entry->random_engine.Seed(lseed);
+    double high = args[1];
+    DLTensor* out = args[2];    
+    entry->random_engine.Seed(int(args[3]));
     entry->random_engine.SampleUniform(out, low, high);
   });
 

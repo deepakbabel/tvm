@@ -1391,11 +1391,16 @@ def _add_n():
     return _impl
 
 def _random_uniform():
-    def _impl(inputs, attr, params):
-        print("inputs is = ", inputs)
-        print("attr is = ", attr)
+    def _impl(inputs, attr, params):        
         shape = _get_param(params, inputs[0])
-        print("shape is = ",shape)
+        # name: "random_uniform/shape"
+        print(attr.get("_output_shapes"),(2,2))
+        print(attr.get("value"), 0.0)
+        print(attr.get("value"), (1.0))
+        print(attr.get("dtype"), "float32")
+        print(attr.get("seed"), None)
+        print(attr.get("seed2"), None)
+
         minval = attr.get('minval',0)
         print(minval)
         print("minval is = ",minval)
@@ -1406,8 +1411,10 @@ def _random_uniform():
         seed = attr.get('seed',0)
         print("seed is = ",seed)
         attr['seed'] = seed
-        # seed2 = attr.get('seed2', 0)
-        # print("seed2 is = ", seed2)
+        seed2 = attr.get('seed2')
+        if seed2 is not None:
+            seed = seed2
+
         name = attr.get('name',"random_uniform")
         print("name is = ",name)
         # size_splits = _get_param(params, inputs[1])

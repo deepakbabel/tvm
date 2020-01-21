@@ -57,8 +57,9 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape,
       return call_packed({
         Expr("tvm.contrib.random.uniform"),
         minval,
-        maxval,
+        maxval,        
         pack_buffer(outs[0]),
+        seed,
         });
   },name,"",{});
 }
