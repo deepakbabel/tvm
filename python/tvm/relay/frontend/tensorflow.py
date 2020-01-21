@@ -1414,11 +1414,11 @@ def _random_uniform():
         return AttrCvt(
             op_name="random_uniform",
             ignores=['seed2'],
-            extras={'shape': shape,
-                    'minval': _expr.const(minval),
-                    'maxval': _expr.const(maxval),
+            extras={'shape': shape.tolist(),
+                    'minval': minval,
+                    'maxval': maxval,
                     'dtype': dtype,
-                    'seed': _expr.const(seed),
+                    'seed': seed,
                     'name': name})([], attr)
     return _impl
 

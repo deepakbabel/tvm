@@ -923,5 +923,6 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
     else:
         minval = const(minval, dtype=dtype)
     print("now calling make function............")
-
+    print(minval)
+    print(maxval)
     return _make.random_uniform(shape, minval, maxval, dtype, seed, name)

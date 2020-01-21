@@ -346,10 +346,10 @@ struct RandomUniformAttrs : public tvm::AttrsNode<RandomUniformAttrs> {
     TVM_ATTR_FIELD(dtype)
         .describe("The type of the output.");
     //TVM_ATTR_FIELD(seed).set_default(0)
-    TVM_ATTR_FIELD(seed).set_default(0)
+    TVM_ATTR_FIELD(seed)
         .describe("Integer. Used to create a random seed for the distribution.");
     //TVM_ATTR_FIELD(name).set_default("")
-    TVM_ATTR_FIELD(name).set_default("random.uniform")
+    TVM_ATTR_FIELD(name)
         .describe("name of the operation. Optional field.");
   }
 };  // struct RandomUniformAttrs
