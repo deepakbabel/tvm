@@ -53,18 +53,34 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape,
     std::string tag = kInjective;
     Tensor lhs;
     Tensor rhs;    
-    if(dtype.is_float()){
-    return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
-      return call_packed({
-        Expr("tvm.contrib.random.uniform"),
-        minval,
-        maxval,
-        pack_buffer(outs[0]),
-        seed,
-        });
-  },name,"",{});
+    if(dtype.code() == kDLFloat){
+      if(dtype.bits() == 32 && dtype.lanes() == 1)
+      {
+        return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
+          return call_packed({
+            Expr("tvm.contrib.random.uniform"),
+            minval,
+            maxval,
+            pack_buffer(outs[0]),
+            seed,
+          });
+        },name,"",{});
+      }
+      else
+      {
+        return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
+          return call_packed({
+            Expr("tvm.contrib.random.uniform.real"),
+            minval,
+            maxval,
+            pack_buffer(outs[0]),
+            seed,
+          });
+        },name,"",{});
+      }
   }
-  else if(dtype.is_int()){
+  else if(dtype.is_int())
+  {
     return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
       return call_packed({
         Expr("tvm.contrib.random.uniform.int"),
@@ -72,10 +88,9 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape,
         maxval,
         pack_buffer(outs[0]),
         seed,
-        });
-  },name,"",{});
+      });
+    },name,"",{});
   }
-  
 }
 
 }  // namespace contrib

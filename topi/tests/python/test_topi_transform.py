@@ -917,7 +917,17 @@ def test_one_hot():
     verify_one_hot((3, 2, 4, 5), 6, 1.0, 0.0, 0, "float32")
 
 def test_random_uniform():
-    verify_random_uniform((1024,1024),-3.0,5.0,"float32",1, "")
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float32", 0, "")
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float32", 0, "")
+
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float64", 1, "")
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float64", 3, "")
+
+    verify_random_uniform((1024, 1024), -3, 5, "int32", 1, "")
+    verify_random_uniform((1024, 1024), -3, 5, "int32", 3, "")
+    #
+    verify_random_uniform((1024, 1024), -3, 5, "int64", 4, "")
+    verify_random_uniform((1024, 1024), -3, 5, "int64", 4, "")
 
 if __name__ == "__main__":
     test_random_uniform()
