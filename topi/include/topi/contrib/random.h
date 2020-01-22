@@ -26,6 +26,8 @@
 
 #include "tvm/operation.h"
 #include "topi/detail/extern.h"
+#include <fstream>
+using namespace std;
 
 namespace topi {
 namespace contrib {
@@ -49,6 +51,10 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape,
                                   Type dtype,
                                   Integer seed,
                                   std::string name = "random.uniform") {
+    fstream f;
+    f.open("randomuniform.txt");
+    f<<"dtype is = "<<dtype;
+    f.close();
     Array<Tensor> mydata;
     std::string tag = kInjective;
     Tensor lhs;

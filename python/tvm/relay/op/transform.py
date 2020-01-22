@@ -899,13 +899,6 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         relay.arange(1, 5) = [1, 2, 3, 4]
         relay.arange(1, 5, 1.5) = [1, 2.5, 4]
     """
-    print("1111111111111111")
-    print(shape)
-    print(minval)
-    print(maxval)
-    print(dtype)
-    print(seed)
-    print(name)
     if dtype is None:
         dtype = "float32"
 
@@ -913,7 +906,7 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         if (dtype.find("float") != -1):
             maxval = const(1, dtype)
         else:
-            print("maxval should be specified for integer datatype")
+            raise ValueError("maxval should be specified for integer datatype")
     else:
         maxval = const(maxval, dtype=dtype)
 
@@ -922,7 +915,5 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         minval = const(0, dtype=dtype)
     else:
         minval = const(minval, dtype=dtype)
-    print("now calling make function............")
-    print(minval)
-    print(maxval)
+
     return _make.random_uniform(shape, minval, maxval, dtype, seed, name)

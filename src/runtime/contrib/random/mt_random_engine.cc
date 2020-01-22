@@ -96,7 +96,7 @@ class RandomEngine {
   }
 
   /*!
-    * \brief Fills a tensor with values drawn from Unif(low, high)
+    * \brief Fills a tensor with double values drawn from Unif(low, high)
     */
   void SampleUniformReal(DLTensor* data, double low, double high) {
     CHECK_GT(high, low) << "high must be bigger than low";
@@ -108,27 +108,20 @@ class RandomEngine {
       size *= data->shape[i];
     }
 
-    CHECK(dtype.code == kDLFloat);
-    if(dtype.bits == 16)
-    {
-      LOG(FATAL) << "Do not support random.uniform for 64 bit yet";
-    }
-    else
-    {
-      LOG(INFO) << "64 bit float value";
-      if (data->ctx.device_type == kDLCPU) {
-        std::uniform_real_distribution<double> uniform_dist(low, high);
-        std::generate_n(static_cast<double*>(data->data), size, [&] () {
-          return uniform_dist(rnd_engine_);
-        });
-      } else {
-        LOG(FATAL) << "Do not support random.uniform on this device yet";
-      }
+    CHECK(dtype.code == kDLFloat && dtype.bits == 64);
+    LOG(INFO) << "64 bit float value";
+    if (data->ctx.device_type == kDLCPU) {
+      std::uniform_real_distribution<double> uniform_dist(low, high);
+      std::generate_n(static_cast<double*>(data->data), size, [&] () {
+        return uniform_dist(rnd_engine_);
+      });
+    } else {
+      LOG(FATAL) << "Do not support random.uniform on this device yet";
     }
   }
 
    /*!
-    * \brief Fills a tensor with values drawn from Unif(low, high)
+    * \brief Fills a tensor with integer values drawn from Unif(low, high)
     */
   void SampleUniformInt(DLTensor* data, int64_t low, int64_t high) {
     CHECK_GT(high, low) << "high must be bigger than low";

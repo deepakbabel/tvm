@@ -571,10 +571,30 @@ def fun1(A, shape, pdtype):
         check_device(device)
 
 
-def verify_random_uniform(shape, minval, maxval, dtype, seed, name):
+def verify_random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=None):
     A = topi.random_uniform(shape, minval, maxval, dtype, seed, name)
 
-    return fun1(A, shape, dtype)
+    def check_device(device):
+        ctx = tvm.context(device, 0)
+        if not ctx.exist:
+            print("Skip because %s is not enabled" % device)
+            return
+        print("Running on target: %s" % device)
+        with tvm.target.create(device):
+            s = topi.generic.schedule_extern(A)
+            # "rocm", target_host = "llvm", name = "conv2d")
+            # s = topi.generic.schedule_injective(A)
+        # f = tvm.build(s, [A], "cpu", "llvm", device)
+        f = tvm.build(s, A, device)
+        a_nd = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=dtype), ctx)
+
+        f(a_nd)
+        print(a_nd)
+        # tvm.testing.assert_allclose(a_nd.asnumpy(), a_np)
+
+    for device in get_all_backend():
+        check_device(device)
+    # return fun1(A, shape, dtype)
     # m = 1024
     # n = 1024
     # msize = shape
@@ -599,7 +619,7 @@ def verify_random_uniform(shape, minval, maxval, dtype, seed, name):
     #     assert abs(np.min(na) - 0.0) < 1e-3
     #     assert abs(np.max(na) - 1.0) < 1e-3
 
-    verify()
+    # verify()
 
 def test_strided_slice():
     verify_strided_slice((3, 4, 3), [0, 0, 0], [4, -5, 4], [1, -1, 2])
@@ -924,11 +944,12 @@ def test_random_uniform():
     verify_random_uniform((1024, 1024), -3.0, 5.0, "float64", 1, "")
     verify_random_uniform((1024, 1024), -3.0, 5.0, "float64", 3, "")
 
-    verify_random_uniform((1024, 1024), -3, 5, "int32", 1, "")
-    verify_random_uniform((1024, 1024), -3, 5, "int32", 3, "")
-    #
-    verify_random_uniform((1024, 1024), -3, 5, "int64", 4, "")
-    # verify_random_uniform((1024, 1024), -3, 5, "int16", 4, "")
+    #Uncomment the following test case to check whether we raise error for integral values when dtype is integer
+    # verify_random_uniform((1024, 1024), minval=-3, maxval=None, dtype="int32", seed=0, name="")
+    verify_random_uniform((1024, 1024), -3, 5, "int32", 0, "")
+
+    verify_random_uniform((1024, 1024), -3, 5, "int64", 1, "")
+    verify_random_uniform((1024, 1024), -3, 5, "int64", 3, "")
 
 if __name__ == "__main__":
     test_random_uniform()

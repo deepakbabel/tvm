@@ -486,25 +486,15 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         if (dtype.find("float") != -1):
             maxval = 1.0
         else:
-            print("maxval should be specified for integer datatype")
-
+            raise ValueError("maxval should be specified for integer datatype")
+            # print("maxval should be specified for integer datatype")
     if minval is None:
         if (dtype.find("float") != -1):
             minval = 0.0
         else:
             minval = 0
-    target = tvm.target.current_target()
-    print("222222222222222222222")
-    # if "random" in target:
+
     return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
-    # if target is not None:
-    #     print("33333333333333333333333")
-    #     print("going into python random.uniform")
-    #     return random.uniform(minval, maxval, shape)
-    # else:
-    #     print("44444444444444444444")
-    #     print("going into c++ random.uniform")
-    #     return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
 
 def repeat(a, repeats, axis):
     """Repeats elements of an array.

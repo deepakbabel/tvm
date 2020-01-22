@@ -39,7 +39,6 @@
 #include "../../pass/alter_op_layout.h"
 #include "../../pass/pattern_util.h"
 #include "transform.h"
-#include <fstream>
 
 namespace tvm {
 namespace relay {
@@ -2727,16 +2726,8 @@ TVM_REGISTER_NODE_TYPE(RandomUniformAttrs);
 bool RandomUniformRel(  const Array<Type>& types,
                         int num_inputs,
                         const Attrs& raw_attrs,
-                        const TypeReporter& reporter) {
-  
-  std::ofstream f;
-  f.open("randomuniform.txt");
-  f<<"11111";
-  f<<"num of inputs is = "<<num_inputs;
-  f<<"types size is = "<<types.size();
-  // f<<__FILE__<< " "<< __func__;
-  f.close();
-  // CHECK_EQ(types.size(), 3);
+                        const TypeReporter& reporter) {  
+  CHECK_EQ(types.size(), 3);
   const RandomUniformAttrs* attrs = raw_attrs.as<RandomUniformAttrs>();
   reporter->Assign(types[2], TensorTypeNode::make(attrs->shape, attrs->dtype));
   return true;
@@ -2745,18 +2736,10 @@ bool RandomUniformRel(  const Array<Type>& types,
 Array<Tensor> RandomUniformCompute(const Attrs& attrs,
                             const Array<Tensor>& inputs,
                             const Type& out_type,
-                            const Target& target) {
-  std::ofstream f;
-  f.open("randomuniform.txt");
-  f<<"2222";
-  // f<<__FILE__<< " "<< __func__;
-  f.close();
+                            const Target& target) {    
+  
   const RandomUniformAttrs* param = attrs.as<RandomUniformAttrs>();
-  CHECK(param != nullptr);
-  // return Tensor { 
-  //   topi::random_uniform(param->shape, inputs[0](), inputs[1](), param->dtype,
-  //   param->seed, param->name) 
-  // };
+  CHECK(param != nullptr);  
   return Array<Tensor> {
     topi::random_uniform(param->shape, inputs[0](), inputs[1](), param->dtype,
     param->seed, param->name)
