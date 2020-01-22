@@ -938,8 +938,12 @@ def test_one_hot():
     verify_one_hot((3, 2, 4, 5), 6, 1.0, 0.0, 0, "float32")
 
 def test_random_uniform():
-    # Uncomment the following test case to check whether we raise error for integral values when dtype is integer
+    # Uncomment the following test case to check that we raise error for integral values when dtype is integer
     # verify_random_uniform((1024, 1024), minval=-3, maxval=None, dtype="int32", seed=0, name="")
+
+    # Uncomment the following test case to check that we raise error for integer values
+    # when (maxval-minval == 1) as maxval range is exclusive and we always check that (high > low)
+    # verify_random_uniform((1024, 1024), minval=None, maxval=None, dtype="int64", seed=3, name="")
 
     verify_random_uniform((1024, 1024), -1, 1, "int32", 3, "")
     verify_random_uniform((1024, 1024), minval=None, maxval=2, dtype="int64", seed=3, name="")
