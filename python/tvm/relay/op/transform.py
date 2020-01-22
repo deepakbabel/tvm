@@ -861,7 +861,7 @@ def one_hot(indices, on_value, off_value, depth, axis, dtype):
     """
     return _make.one_hot(indices, on_value, off_value, depth, axis, dtype)
 
-def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=None):
+def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=""):
     """Return pseudo random numbers from a uniform distribution within a given interval[minval,maxval).
 
     .. note::

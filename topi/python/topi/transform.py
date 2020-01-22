@@ -456,7 +456,7 @@ def arange(start, stop=None, step=1, dtype="float32"):
         start = 0
     return cpp.arange(start, stop, step, dtype)
 
-def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=None):
+def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=""):
     """Creates a tensor with evenly spaced values within a given interval.
 
     Parameters

@@ -2751,12 +2751,7 @@ Expr MakeRandomUniform( Array<IndexExpr> shape,
                         Expr maxval,
                         DataType dtype,
                         int seed,
-                        std::string name) {
-  std::ofstream f;
-  f.open("randomuniform.txt");
-  f<<"33333";
-  // f<<__FILE__<< " "<< __func__;
-  f.close();
+                        std::string name="") {
   auto attrs = make_node<RandomUniformAttrs>();
   attrs->shape = std::move(shape);  
   attrs->dtype = std::move(dtype);

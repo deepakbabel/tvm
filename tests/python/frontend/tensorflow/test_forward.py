@@ -2775,66 +2775,37 @@ def test_forward_one_hot():
 
  
 def test_forward_random_uniform():
-    def cmp_tf_tvm_func(tf_output, tvm_output):
-        # since the names from tensorflow and relay runs are not exactly same,
-        # first len(tf_output) will be compared
-        tvm.testing.assert_allclose(len(tf_output), len(tvm_output))
-        na = tvm_output
-        nb = tf_output
-        print(tf_output)
-        print(tvm_output)
-        # assert abs(np.mean(na) - 0.0) < 1e-2
-        # assert abs(np.min(na) - -3.0) < 1e-3
-        # assert abs(np.max(na) - 3.0) < 1e-3
 
-    """test operator RandomUniform"""
-    # out_name = ['random_uniform/shape:0', 'random_uniform/min:0', 'random_uniform/max:0',
-    #             'random_uniform/RandomUniform:0', 'random_uniform:0']
-    # tf.reset_default_graph()
-    # tf.random_uniform((1024, 1024), -10.0, 10.0, tf.float32, 6)
-    # # tf.range(1, 18, 3, name="range")
-    # compare_tf_with_tvm([], [], 'random_uniform/shape:0', 'random_uniform/min:0', 'random_uniform/max:0',
-    #             'random_uniform/RandomUniform:0', 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func)
+    # def cmp_tf_tvm_func_int(tf_output, tvm_output):
+    #     """Check that both tf and tvm outputs should have the same shape"""
+    #     tvm.testing.assert_allclose(len(tf_output), len(tvm_output))
     #
-    # tf.reset_default_graph()
-    # tf.random_uniform((1024, 1024), -10.0, 10.0, tf.float32, 6)
-    # # tf.range(1, 18, 3, name="range")
-    # compare_tf_with_tvm([], [], 'random_uniform/shape:0', 'random_uniform/min:0', 'random_uniform/max:0',
-    #             'random_uniform/RandomUniform:0', 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func)
+    #     assert abs(np.mean(tvm_output) - 2) < 1e-2
+    #     assert abs(np.min(tvm_output) - 0) < 1e-3
+    #     assert abs(np.max(tvm_output) - 4) < 1e-3
 
-    tf.reset_default_graph()
-    tf.random_uniform((1024, 1024), -3.0, 3.0, tf.float32, 0)
-    # tf.range(1, 18, 3, name="range")
-    compare_tf_with_tvm([], [], 'random_uniform/shape:0', custom_compare_func=cmp_tf_tvm_func)
+    def cmp_tf_tvm_func_float(tf_output, tvm_output):
+        """Check that both tf and tvm outputs should have the same shape"""
+        tvm.testing.assert_allclose(len(tf_output), len(tvm_output))
 
-    print("33333")
-    tf.reset_default_graph()
-    tf.random_uniform((1024, 1024), -3.0, 3.0, tf.float32, 2)
-    compare_tf_with_tvm([], [], 'random_uniform/min:0', custom_compare_func=cmp_tf_tvm_func)
+        assert abs(np.mean(tvm_output) - 0.0) < 1e-2
+        assert abs(np.min(tvm_output) - -3.0) < 1e-3
+        assert abs(np.max(tvm_output) - 3.0) < 1e-3
 
-    print("444444")
-    tf.reset_default_graph()
-    tf.random_uniform((1024, 1024), -3.0, 3.0, tf.float32, 2)
-    compare_tf_with_tvm([], [], 'random_uniform/max:0', custom_compare_func=cmp_tf_tvm_func)
+    # """test operator random.uniform with min, max and seed values for integer values"""
+    # tf.compat.v1.reset_default_graph()
+    # tf.random.uniform((1024, 1024), 0, 5, tf.int32, 3)
+    # compare_tf_with_tvm([], [], 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func_int)
 
-    print("5555555")
-    tf.reset_default_graph()
-    tf.random_uniform((1024, 1024), -3.0, 3.0, tf.float32, 2)
-    compare_tf_with_tvm([], [], 'random_uniform/RandomUniform:0', custom_compare_func=cmp_tf_tvm_func)
+    """test operator random.uniform with min, max and seed values"""
+    tf.compat.v1.reset_default_graph()
+    tf.random.uniform((1024, 1024), -3.0, 3.0, tf.float32, 3)
+    compare_tf_with_tvm([], [], 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func_float)
 
-    print("666666")
-    tf.reset_default_graph()
-    tf.random_uniform((1024, 1024), -3.0, 3.0, tf.float32, 2)
-    compare_tf_with_tvm([], [], 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func)
-
-    print("777777")
-    tf.reset_default_graph()
-    tf.random_uniform((1024, 1024), -3.0, 3.0, tf.float32, 2)
-    compare_tf_with_tvm([], [], 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func)
-    """test type assignment for operator Range"""
-    # tf.reset_default_graph()
-    # tf.random_uniform((1024,1024), minval=-3.0, maxval=3.0, dtype=tf.float32, seed=0, name="random_uniform")
-    # compare_tf_with_tvm([], [], 'random_uniform:0')
+    """this second invocation should again fetch the same sequence of numbers as the same seed is used in both invocations"""
+    tf.compat.v1.reset_default_graph()
+    tf.random.uniform((1024, 1024), -3.0, 3.0, tf.float32, 3)
+    compare_tf_with_tvm([], [], 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func_float)
 
 #######################################################################
 # AddN
