@@ -21,9 +21,10 @@
  * \brief External function interface to cuBLAS libraries
  * \file cublas.h
  */
-#ifndef TOPI_CONTRIB_RANDOM_H_
-#define TOPI_CONTRIB_RANDOM_H_
+#ifndef TVM_TOPI_INCLUDE_TOPI_CONTRIB_RANDOM_H_
+#define TVM_TOPI_INCLUDE_TOPI_CONTRIB_RANDOM_H_
 
+#include <string>
 #include "tvm/operation.h"
 #include "topi/detail/extern.h"
 
@@ -43,10 +44,13 @@ using namespace topi::detail;
 *
 * \return The output uniform P.D. tensor with filled psuedo random numbers
 */
-inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape, const Expr& minval,
-                                         const Expr& maxval, Type dtype, Integer seed,
-                                         std::string name = "random.uniform") {
-  if (dtype.code() == kDLFloat) { //float values
+inline tvm::Array<Tensor>
+random_uniform(const Array<Expr>& shape, const Expr& minval,
+               const Expr& maxval, Type dtype, Integer seed,
+               std::string name = "random.uniform") {
+  CHECK(dtype.is_float() || dtype.is_int());
+
+  if (dtype.code() == kDLFloat) {  // float values
     if (dtype.bits() == 32 && dtype.lanes() == 1) {
       return make_extern({{shape}}, {dtype}, {},
                          [&](Array<Buffer> ins, Array<Buffer> outs) {
@@ -59,7 +63,7 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape, const Expr& m
                            });
                          },
                          name, "", {});
-    } else { //double values
+    } else {  // double values
       return make_extern({{shape}}, {dtype}, {},
                          [&](Array<Buffer> ins, Array<Buffer> outs) {
                            return call_packed({
@@ -72,8 +76,8 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape, const Expr& m
                          },
                          name, "", {});
     }
-  } else if (dtype.is_int()) { //integer values
-    return make_extern({{shape}}, {dtype}, {},
+  } else {  // integer values
+  return make_extern({{shape}}, {dtype}, {},
                        [&](Array<Buffer> ins, Array<Buffer> outs) {
                          return call_packed({
                              Expr("tvm.contrib.random.uniform.int"),
@@ -90,4 +94,4 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape, const Expr& m
 }  // namespace contrib
 }  // namespace topi
 
-#endif  // TOPI_CONTRIB_CONTRIB_H_
+#endif  // TVM_TOPI_INCLUDE_TOPI_CONTRIB_RANDOM_H_

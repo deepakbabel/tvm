@@ -38,7 +38,7 @@
 #include "../../../arithmetic/compute_expr.h"
 #include "../../pass/alter_op_layout.h"
 #include "../../pass/pattern_util.h"
-#include "transform.h"
+#include "./transform.h"
 
 namespace tvm {
 namespace relay {
@@ -2720,21 +2720,21 @@ RELAY_REGISTER_OP("one_hot")
 .set_attr<FTVMCompute>("FTVMCompute", OneHotCompute)
 .set_attr<TOpPattern>("TOpPattern", kOutEWiseFusable);
 
-//randomuniform operator
+// randomuniform operator
 TVM_REGISTER_NODE_TYPE(RandomUniformAttrs);
 
-//Relation for RandomUniform
-bool RandomUniformRel(  const Array<Type>& types,
-                        int num_inputs,
-                        const Attrs& raw_attrs,
-                        const TypeReporter& reporter) {
+// Relation for RandomUniform
+bool RandomUniformRel(const Array<Type>& types,
+                      int num_inputs,
+                      const Attrs& raw_attrs,
+                      const TypeReporter& reporter) {
   CHECK_EQ(types.size(), 3);
   const RandomUniformAttrs* attrs = raw_attrs.as<RandomUniformAttrs>();
   reporter->Assign(types[2], TensorTypeNode::make(attrs->shape, attrs->dtype));
   return true;
 }
 
-//Compute description for RandomUniform
+// Compute description for RandomUniform
 Array<Tensor> RandomUniformCompute(const Attrs& attrs,
                             const Array<Tensor>& inputs,
                             const Type& out_type,
@@ -2747,13 +2747,13 @@ Array<Tensor> RandomUniformCompute(const Attrs& attrs,
   };
 }
 
-//make call node for RandomUniform
-Expr MakeRandomUniform( Array<IndexExpr> shape,
-                        Expr minval,
-                        Expr maxval,
-                        DataType dtype,
-                        int seed,
-                        std::string name="") {
+// make call node for RandomUniform
+Expr MakeRandomUniform(Array<IndexExpr> shape,
+                       Expr minval,
+                       Expr maxval,
+                       DataType dtype,
+                       int seed,
+                       std::string name = "") {
   auto attrs = make_node<RandomUniformAttrs>();
   attrs->shape = std::move(shape);
   attrs->dtype = std::move(dtype);

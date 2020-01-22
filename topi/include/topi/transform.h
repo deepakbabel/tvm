@@ -24,6 +24,7 @@
 #ifndef TOPI_TRANSFORM_H_
 #define TOPI_TRANSFORM_H_
 
+#include <dmlc/thread_local.h>
 #include <string>
 #include <vector>
 #include <iterator>
@@ -37,11 +38,8 @@
 #include "tvm/operation.h"
 #include "tvm/expr_operator.h"
 #include "tvm/data_layout.h"
-#include "tvm/operation.h"
 #include "tvm/build_module.h"
-#include "topi/tags.h"
 #include "topi/detail/array_utils.h"
-#include <dmlc/thread_local.h>
 #include "topi/contrib/random.h"
 #include "topi/generic/extern.h"
 
@@ -1309,14 +1307,15 @@ inline Tensor one_hot(const Tensor& indices,
   }, name, tag);
 }
 
-//random uniform operator
-inline Array<Tensor> random_uniform(  const Array<Expr>& shape,
-                                      const Expr& minval,
-                                      const Expr& maxval,
-                                      Type dtype,
-                                      Integer seed,
-                                      std::string name = "random.uniform"){
-  auto mm = topi::contrib::random_uniform(shape, minval, maxval, dtype, seed, name);
+// random uniform operator
+inline Array<Tensor> random_uniform(const Array<Expr>& shape,
+                                    const Expr& minval,
+                                    const Expr& maxval,
+                                    Type dtype,
+                                    Integer seed,
+                                    std::string name = "random.uniform") {
+  auto mm = topi::contrib::random_uniform
+            (shape, minval, maxval, dtype, seed, name);
   return {mm};
 }
 

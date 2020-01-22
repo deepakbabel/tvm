@@ -136,15 +136,12 @@ class RandomEngine {
     CHECK(dtype.code == kDLInt);
 
     if (data->ctx.device_type == kDLCPU) {
-      if (dtype.bits != 64) //32 bit integers
-      {
+      if (dtype.bits != 64) {  // 32 bit integers
         std::uniform_int_distribution<int> uniform_dist(low, high);
         std::generate_n(static_cast<int*>(data->data), size, [&] () {
           return uniform_dist(rnd_engine_);
         });
-      }
-      else //64 bit integer
-      {
+      } else {  // 64 bit integer
         LOG(INFO) << "64 bit integer value";
         std::uniform_int_distribution<int64_t> uniform_dist(low, high);
         std::generate_n(static_cast<int64_t*>(data->data), size, [&] () {
@@ -155,7 +152,7 @@ class RandomEngine {
       LOG(FATAL) << "Do not support random.uniform on this device yet";
     }
   }
-  
+
 
    /*!
     * \brief Fills a tensor with values drawn from Normal(loc, scale**2)

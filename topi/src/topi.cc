@@ -450,14 +450,14 @@ TVM_REGISTER_GLOBAL("topi.one_hot")
   *rv = one_hot(args[0], args[1], args[2], depth, axis, dtype);
   });
 
- TVM_REGISTER_GLOBAL("topi.random_uniform")
-.set_body([](TVMArgs args, TVMRetValue *rv) {  
+TVM_REGISTER_GLOBAL("topi.random_uniform")
+.set_body([](TVMArgs args, TVMRetValue *rv) {
   DataType dtype = args[3];
   int seed = args[4];
   std::string name = args[5];
   *rv = random_uniform(args[0], args[1], args[2], dtype, seed, name);
 });
-  
+
 /* Ops from nn/upsampling.h */
 TVM_REGISTER_GLOBAL("topi.nn.upsampling")
 .set_body([](TVMArgs args, TVMRetValue *rv) {
