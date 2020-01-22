@@ -695,13 +695,24 @@ def test_random_uniform():
         for target, ctx in ctx_list():
             for kind in ["graph", "debug"]:
                 intrp = relay.create_executor(kind, ctx=ctx, target=target)
-                print("444444444444")
                 print(str(func))
                 print(x)
                 op_res = intrp.evaluate(func)()
                 print(op_res)
-        # verify()
-    verify_random_uniform((1024, 1024), -3.0, 3.0, "float32", 1, "")
+
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float32", 0, "")
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float32", 0, "")
+
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float64", 1, "")
+    verify_random_uniform((1024, 1024), -3.0, 5.0, "float64", 3, "")
+
+    # Uncomment the following test case to check whether we raise error for integral values when dtype is integer
+    # verify_random_uniform((1024, 1024), minval=-3, maxval=None, dtype="int32", seed=0, name="")
+    verify_random_uniform((1024, 1024), -3, 5, "int32", 0, "")
+    verify_random_uniform((1024, 1024), -3, 5, "int32", 0, "")
+
+    verify_random_uniform((1024, 1024), -3, 5, "int64", 1, "")
+    verify_random_uniform((1024, 1024), -3, 5, "int64", 3, "")
 
 if __name__ == "__main__":
     test_arange()
