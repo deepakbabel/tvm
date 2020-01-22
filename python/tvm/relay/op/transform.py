@@ -865,10 +865,10 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
     """Return pseudo random numbers from a uniform distribution within a given interval[minval,maxval).
 
     .. note::
-        Similar to ``numpy.arange``, when only one argument is given, it is used
+        Similar to ``numpy.random.uniform``, when only one argument is given, it is used
         as `stop` instead of `start` while `start` takes default value 0.
 
-        Warning: Undefined behavior when dtype is incompatible with start/stop/step.
+        Warning: Undefined behavior when dtype is incompatible with minval/maxval.
         It could lead to different results compared to numpy, MXNet, pytorch, etc.
 
     Parameters
@@ -911,7 +911,6 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         maxval = const(maxval, dtype=dtype)
 
     if minval is None:
-        minval = 0
         minval = const(0, dtype=dtype)
     else:
         minval = const(minval, dtype=dtype)

@@ -484,15 +484,16 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
 
     if maxval is None:
         if (dtype.find("float") != -1):
-            maxval = 1.0
+            maxval = tvm.const(1, dtype)
         else:
             raise ValueError("maxval should be specified for integer datatype")
-            # print("maxval should be specified for integer datatype")
+    else:
+        maxval = tvm.const(maxval, dtype=dtype)
+
     if minval is None:
-        if (dtype.find("float") != -1):
-            minval = 0.0
-        else:
-            minval = 0
+        minval = tvm.const(0, dtype=dtype)
+    else:
+        minval = tvm.const(minval, dtype=dtype)
 
     return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
 
