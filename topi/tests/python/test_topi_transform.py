@@ -562,6 +562,7 @@ def fun1(A, shape, pdtype):
         # f = tvm.build(s, [A], "cpu", "llvm", device)
         f = tvm.build(s, A, device)
         a_nd = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=pdtype), ctx)
+        print(pdtype)
         f(a_nd)
         print(a_nd)
         # tvm.testing.assert_allclose(a_nd.asnumpy(), a_np)
@@ -927,7 +928,7 @@ def test_random_uniform():
     verify_random_uniform((1024, 1024), -3, 5, "int32", 3, "")
     #
     verify_random_uniform((1024, 1024), -3, 5, "int64", 4, "")
-    verify_random_uniform((1024, 1024), -3, 5, "int64", 4, "")
+    # verify_random_uniform((1024, 1024), -3, 5, "int16", 4, "")
 
 if __name__ == "__main__":
     test_random_uniform()

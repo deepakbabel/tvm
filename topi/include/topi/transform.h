@@ -43,8 +43,10 @@
 #include "topi/detail/array_utils.h"
 #include <dmlc/thread_local.h>
 #include "topi/contrib/random.h"
-#include </home/deepak/projects/neoai/tvm/src/runtime/contrib/random/mt_random_engine.cc>
+// #include "tvm/src/runtime/contrib/random/mt_random_engine.cc"
 #include "topi/generic/extern.h"
+#include <fstream>
+using namespace std;
 
 namespace topi {
 using namespace tvm;
@@ -1424,6 +1426,11 @@ inline Array<Tensor> random_uniform( const Array<Expr>& shape,
                               Type dtype,
                               Integer seed,
                               std::string name = "random.uniform"){
+  fstream f;
+  f.open("randomuniform.txt");
+  f<<"dtype is = "<<dtype;
+  f.close();
+
   auto mm = topi::contrib::random_uniform(shape, minval, maxval, dtype, seed, name);
   return {mm};
 }
