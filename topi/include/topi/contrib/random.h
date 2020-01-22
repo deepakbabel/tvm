@@ -52,16 +52,30 @@ inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape,
     Array<Tensor> mydata;
     std::string tag = kInjective;
     Tensor lhs;
-    Tensor rhs;
+    Tensor rhs;    
+    if(dtype.is_float()){
     return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
       return call_packed({
         Expr("tvm.contrib.random.uniform"),
         minval,
-        maxval,        
+        maxval,
         pack_buffer(outs[0]),
         seed,
         });
   },name,"",{});
+  }
+  else if(dtype.is_int()){
+    return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
+      return call_packed({
+        Expr("tvm.contrib.random.uniform.int"),
+        minval,
+        maxval,
+        pack_buffer(outs[0]),
+        seed,
+        });
+  },name,"",{});
+  }
+  
 }
 
 }  // namespace contrib

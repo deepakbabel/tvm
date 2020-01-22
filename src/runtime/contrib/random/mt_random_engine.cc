@@ -96,6 +96,31 @@ class RandomEngine {
   }
 
    /*!
+    * \brief Fills a tensor with values drawn from Unif(low, high)
+    */
+  void SampleUniformInt(DLTensor* data, int low, int high) {
+    CHECK_GT(high, low) << "high must be bigger than low";
+    CHECK(data->strides == nullptr);
+
+    DLDataType dtype = data->dtype;
+    int64_t size = 1;
+    for (int i = 0; i < data->ndim; ++i) {
+      size *= data->shape[i];
+    }
+
+    CHECK(dtype.code == kDLInt);
+
+    if (data->ctx.device_type == kDLCPU) {
+      std::uniform_int_distribution<int> uniform_dist(low, high);
+      std::generate_n(static_cast<int*>(data->data), size, [&] () {
+        return uniform_dist(rnd_engine_);
+      });
+    } else {
+      LOG(FATAL) << "Do not support random.uniform on this device yet";
+    }
+  }
+
+   /*!
     * \brief Fills a tensor with values drawn from Normal(loc, scale**2)
     */
   void SampleNormal(DLTensor* data, float loc, float scale) {
