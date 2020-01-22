@@ -2776,26 +2776,12 @@ def test_forward_one_hot():
  
 def test_forward_random_uniform():
 
-    # def cmp_tf_tvm_func_int(tf_output, tvm_output):
-    #     """Check that both tf and tvm outputs should have the same shape"""
-    #     tvm.testing.assert_allclose(len(tf_output), len(tvm_output))
-    #
-    #     assert abs(np.mean(tvm_output) - 2) < 1e-2
-    #     assert abs(np.min(tvm_output) - 0) < 1e-3
-    #     assert abs(np.max(tvm_output) - 4) < 1e-3
-
     def cmp_tf_tvm_func_float(tf_output, tvm_output):
         """Check that both tf and tvm outputs should have the same shape"""
         tvm.testing.assert_allclose(len(tf_output), len(tvm_output))
-
         assert abs(np.mean(tvm_output) - 0.0) < 1e-2
         assert abs(np.min(tvm_output) - -3.0) < 1e-3
         assert abs(np.max(tvm_output) - 3.0) < 1e-3
-
-    # """test operator random.uniform with min, max and seed values for integer values"""
-    # tf.compat.v1.reset_default_graph()
-    # tf.random.uniform((1024, 1024), 0, 5, tf.int32, 3)
-    # compare_tf_with_tvm([], [], 'random_uniform:0', custom_compare_func=cmp_tf_tvm_func_int)
 
     """test operator random.uniform with min, max and seed values"""
     tf.compat.v1.reset_default_graph()

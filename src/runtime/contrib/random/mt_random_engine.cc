@@ -121,7 +121,7 @@ class RandomEngine {
   }
 
    /*!
-    * \brief Fills a tensor with integer values drawn from Unif(low, high)
+    * \brief Fills a tensor with integer values drawn from Unif(low, high)    
     */
   void SampleUniformInt(DLTensor* data, int64_t low, int64_t high) {
     CHECK_GT(high, low) << "high must be bigger than low";

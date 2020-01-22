@@ -1310,12 +1310,12 @@ inline Tensor one_hot(const Tensor& indices,
 }
 
 //random uniform operator
-inline Array<Tensor> random_uniform( const Array<Expr>& shape,
-                              const Expr& minval,
-                              const Expr& maxval,
-                              Type dtype,
-                              Integer seed,
-                              std::string name = "random.uniform"){
+inline Array<Tensor> random_uniform(  const Array<Expr>& shape,
+                                      const Expr& minval,
+                                      const Expr& maxval,
+                                      Type dtype,
+                                      Integer seed,
+                                      std::string name = "random.uniform"){
   auto mm = topi::contrib::random_uniform(shape, minval, maxval, dtype, seed, name);
   return {mm};
 }

@@ -332,23 +332,24 @@ struct RandomUniformAttrs : public tvm::AttrsNode<RandomUniformAttrs> {
   TVM_DECLARE_ATTRS(RandomUniformAttrs, "relay.attrs.RandomUniformAttrs") {
     TVM_ATTR_FIELD(shape)
         .describe("A 1-D array. The shape of the output tensor.");
-    // TVM_ATTR_FIELD(minval).set_default(make_const(Float(32), 0))
-    TVM_ATTR_FIELD(minval).describe("The lower bound on the range of random values to generate. Defaults to 0.");
-    if(dtype.is_float()) {
-      TVM_ATTR_FIELD(maxval).describe("The upper bound on the range of random values to generate. Defaults to 1 if dtype is floating point.");
-    // TVM_ATTR_FIELD(maxval).set_default(make_const(Float(32), 1))
-    //     .describe("The upper bound on the range of random values to generate. Defaults to 1 if dtype is floating point.");
-    }
-    else if(dtype.is_int()) {
+    TVM_ATTR_FIELD(minval)
+        .describe("The lower bound on the range of"
+                  "random values to generate."
+                  " Defaults to 0.");
+    if (dtype.is_float()) {
+      TVM_ATTR_FIELD(maxval)
+        .describe("The upper bound on the range of"
+                "random values to generate."
+                "Defaults to 1 if dtype is floating point.");
+    } else if (dtype.is_int()) {
     TVM_ATTR_FIELD(maxval)
-        .describe("The upper bound on the range of random values to generate. Defaults to 1 if dtype is floating point.");        
+        .describe("The upper bound on the range of random values to generate."
+                  " Should be explicitly specified in case of integers.");
     }
     TVM_ATTR_FIELD(dtype)
-        .describe("The type of the output.");
-    //TVM_ATTR_FIELD(seed).set_default(0)
+        .describe("The data type of the output.");
     TVM_ATTR_FIELD(seed)
-        .describe("Integer. Used to create a random seed for the distribution.");
-    //TVM_ATTR_FIELD(name).set_default("")
+        .describe("Integer. Used to set a seed value.");
     TVM_ATTR_FIELD(name).set_default("random_uniform")
         .describe("name of the operation. Optional field.");
   }

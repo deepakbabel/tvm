@@ -26,8 +26,6 @@
 
 #include "tvm/operation.h"
 #include "topi/detail/extern.h"
-#include <fstream>
-using namespace std;
 
 namespace topi {
 namespace contrib {
@@ -45,57 +43,47 @@ using namespace topi::detail;
 *
 * \return The output uniform P.D. tensor with filled psuedo random numbers
 */
-inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape,
-                                  const Expr& minval,
-                                  const Expr& maxval,
-                                  Type dtype,
-                                  Integer seed,
-                                  std::string name = "random.uniform") {
-    fstream f;
-    f.open("randomuniform.txt");
-    f<<"dtype is = "<<dtype;
-    f.close();
-    Array<Tensor> mydata;
-    std::string tag = kInjective;
-    Tensor lhs;
-    Tensor rhs;    
-    if(dtype.code() == kDLFloat){
-      if(dtype.bits() == 32 && dtype.lanes() == 1)
-      {
-        return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
-          return call_packed({
-            Expr("tvm.contrib.random.uniform"),
-            minval,
-            maxval,
-            pack_buffer(outs[0]),
-            seed,
-          });
-        },name,"",{});
-      }
-      else
-      {
-        return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
-          return call_packed({
-            Expr("tvm.contrib.random.uniform.real"),
-            minval,
-            maxval,
-            pack_buffer(outs[0]),
-            seed,
-          });
-        },name,"",{});
-      }
-  }
-  else if(dtype.is_int())
-  {
-    return make_extern( {{shape}}, {dtype},{},[&](Array<Buffer> ins, Array<Buffer> outs){
-      return call_packed({
-        Expr("tvm.contrib.random.uniform.int"),
-        minval,
-        maxval,
-        pack_buffer(outs[0]),
-        seed,
-      });
-    },name,"",{});
+inline tvm::Array<Tensor> random_uniform(const Array<Expr>& shape, const Expr& minval,
+                                         const Expr& maxval, Type dtype, Integer seed,
+                                         std::string name = "random.uniform") {
+  if (dtype.code() == kDLFloat) { //float values
+    if (dtype.bits() == 32 && dtype.lanes() == 1) {
+      return make_extern({{shape}}, {dtype}, {},
+                         [&](Array<Buffer> ins, Array<Buffer> outs) {
+                           return call_packed({
+                               Expr("tvm.contrib.random.uniform"),
+                               minval,
+                               maxval,
+                               pack_buffer(outs[0]),
+                               seed,
+                           });
+                         },
+                         name, "", {});
+    } else { //double values
+      return make_extern({{shape}}, {dtype}, {},
+                         [&](Array<Buffer> ins, Array<Buffer> outs) {
+                           return call_packed({
+                               Expr("tvm.contrib.random.uniform.real"),
+                               minval,
+                               maxval,
+                               pack_buffer(outs[0]),
+                               seed,
+                           });
+                         },
+                         name, "", {});
+    }
+  } else if (dtype.is_int()) { //integer values
+    return make_extern({{shape}}, {dtype}, {},
+                       [&](Array<Buffer> ins, Array<Buffer> outs) {
+                         return call_packed({
+                             Expr("tvm.contrib.random.uniform.int"),
+                             minval,
+                             maxval,
+                             pack_buffer(outs[0]),
+                             seed,
+                         });
+                       },
+                       name, "", {});
   }
 }
 

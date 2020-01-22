@@ -72,7 +72,6 @@
 #include <topi/rocm/softmax.h>
 #include <topi/rocm/normalization.h>
 #include <topi/contrib/random.h>
-#include <fstream>
 
 namespace topi {
 
@@ -452,11 +451,7 @@ TVM_REGISTER_GLOBAL("topi.one_hot")
   });
 
  TVM_REGISTER_GLOBAL("topi.random_uniform")
-.set_body([](TVMArgs args, TVMRetValue *rv) {
-  std::ofstream f;
-  f.open("randomuniformtopi.txt");
-  f<<"inside topi.cc";
-  f.close();
+.set_body([](TVMArgs args, TVMRetValue *rv) {  
   DataType dtype = args[3];
   int seed = args[4];
   std::string name = args[5];

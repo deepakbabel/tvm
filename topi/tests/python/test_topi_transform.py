@@ -582,44 +582,28 @@ def verify_random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=No
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_extern(A)
-            # "rocm", target_host = "llvm", name = "conv2d")
-            # s = topi.generic.schedule_injective(A)
-        # f = tvm.build(s, [A], "cpu", "llvm", device)
         f = tvm.build(s, A, device)
         a_nd = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=dtype), ctx)
-
         f(a_nd)
-        print(a_nd)
-        # tvm.testing.assert_allclose(a_nd.asnumpy(), a_np)
+        na = a_nd.asnumpy()
+
+        minval1, maxval1 = minval, maxval
+        if minval is None:
+            if dtype.startswith("int"):
+                minval1 = 0
+            else:
+                minval1 = 0.0
+
+        if maxval is None and dtype.startswith("float"):
+            maxval1 = 1.0
+        assert abs(np.min(na) - minval1) < 1e-3
+        if dtype.startswith("int"):
+            maxval1 = maxval - 1
+        assert abs(np.max(na) - maxval1) < 1e-3
 
     for device in get_all_backend():
         check_device(device)
-    # return fun1(A, shape, dtype)
-    # m = 1024
-    # n = 1024
-    # msize = shape
-    # A = topi.random.uniform(minval, maxval, size=msize)
-    # s = tvm.create_schedule(A.op)
-    # # s = tvm.create_schedule(A)
-    #
-    # def verify(target="llvm"):
-    #     if not tvm.module.enabled(target):
-    #         print("skip because %s is not enabled..." % target)
-    #         return
-    #     if not tvm.get_global_func("tvm.contrib.random.uniform", True):
-    #         print("skip because extern function is not available")
-    #         return
-    #     ctx = tvm.cpu(0)
-    #     f = tvm.build(s, [A], target)
-    #     a = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=A.dtype), ctx)
-    #     f(a)
-    #     na = a.asnumpy()
-    #     print(na)
-    #     assert abs(np.mean(na) - 0.5) < 1e-2
-    #     assert abs(np.min(na) - 0.0) < 1e-3
-    #     assert abs(np.max(na) - 1.0) < 1e-3
 
-    # verify()
 
 def test_strided_slice():
     verify_strided_slice((3, 4, 3), [0, 0, 0], [4, -5, 4], [1, -1, 2])

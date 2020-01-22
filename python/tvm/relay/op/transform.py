@@ -861,30 +861,36 @@ def one_hot(indices, on_value, off_value, depth, axis, dtype):
     """
     return _make.one_hot(indices, on_value, off_value, depth, axis, dtype)
 
+
 def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=""):
-    """Return pseudo random numbers from a uniform distribution within a given interval[minval,maxval).
+    """Return pseudo random numbers from a uniform distribution
+        within a given interval[minval,maxval).
 
     .. note::
-        Similar to ``numpy.random.uniform``, when only one argument is given, it is used
-        as `stop` instead of `start` while `start` takes default value 0.
-
-        Warning: Undefined behavior when dtype is incompatible with minval/maxval.
-        It could lead to different results compared to numpy, MXNet, pytorch, etc.
+        Similar to ``tf.random.uniform``
 
     Parameters
     ----------
-    start : tvm.Expr, optional
-        Start of interval. The interval includes this value. The default start
-        value is 0.
+    shape:
 
-    stop : tvm.Expr
-        Stop of interval. The interval does not include this value.
+    minval : tvm.Expr, optional
+        low bound of interval. The interval includes this value. The default start
+        value is 0.0.
 
-    step : tvm.Expr, optional
-        Spacing between values. The default step size is 1.
+    maxval : tvm.Expr
+        upper bound of interval. The interval does not include this value.
+        Default value is 1.0 for floats.
+        For integers, if maxval is not specified, then raises error
+
+    seed : integer, optional
+        Helpful in generating repetitive pseudo random sequences.
+        The default seed is 0 means random sequence.
 
     dtype : str, optional
         The target data type.
+
+    name : str, optional
+        The operation name.
 
     Returns
     -------
@@ -895,15 +901,14 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
     --------
     .. code-block:: python
 
-        relay.arange(5) = [0, 1, 2, 3, 4]
-        relay.arange(1, 5) = [1, 2, 3, 4]
-        relay.arange(1, 5, 1.5) = [1, 2.5, 4]
+        relay.random_uniform((2,2)) = [[0.23, 0.34],
+                                       [0.13, 0.24]]
     """
     if dtype is None:
         dtype = "float32"
 
     if maxval is None:
-        if (dtype.find("float") != -1):
+        if dtype.find("float") != -1:
             maxval = const(1, dtype)
         else:
             raise ValueError("maxval should be specified for integer datatype")

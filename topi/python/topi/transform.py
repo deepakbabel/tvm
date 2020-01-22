@@ -456,28 +456,45 @@ def arange(start, stop=None, step=1, dtype="float32"):
         start = 0
     return cpp.arange(start, stop, step, dtype)
 
+
 def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=""):
-    """Creates a tensor with evenly spaced values within a given interval.
+    """Return pseudo random numbers from a uniform distribution within a given interval[minval,maxval).
+
+    .. note::
+        Similar to ``tf.random.uniform``
 
     Parameters
     ----------
-    start : tvm.Expr, optional
-        Start of interval. The interval includes this value. The default start
-        value is 0.
+    shape:
 
-    stop : tvm.Expr
-        Stop of interval. The interval does not include this value.
+    minval : tvm.Expr, optional
+        low bound of interval. The interval includes this value. The default start
+        value is 0.0.
 
-    step : tvm.Expr, optional
-        Spacing between values. The default step size is 1.
+    maxval : tvm.Expr
+        upper bound of interval. The interval does not include this value. Default value is 1.0 for floats.
+        For integers, if maxval is not specified, then raises error
+
+    seed : integer, optional
+        Helpful in generating repetitive pseudo random sequences. The default seed is 0 means random sequence.
 
     dtype : str, optional
         The target data type.
 
+    name : str, optional
+        The operation name.
+
     Returns
     -------
-    result : tvm.Tensor
-        The resulting tensor.
+    result : Array<tvm.Tensor>
+        The resulting array of tensors.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        relay.random_uniform((2,2)) = [[0.23, 0.34],
+                                       [0.13, 0.24]]
     """
     if dtype is None:
         dtype = "float32"
@@ -496,6 +513,7 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         minval = tvm.const(minval, dtype=dtype)
 
     return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
+
 
 def repeat(a, repeats, axis):
     """Repeats elements of an array.

@@ -157,6 +157,7 @@ TVM_REGISTER_GLOBAL("tvm.contrib.random.uniform.int")
       if (seed > 0)
         entry->random_engine.Seed(seed);
     }
+    //Making high as exclusive as default C++ std implementation treats high also as inclusive
     entry->random_engine.SampleUniformInt(out, low, high-1);
   });
 

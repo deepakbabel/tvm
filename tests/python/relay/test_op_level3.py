@@ -688,24 +688,30 @@ def test_gather_nd():
     verify_gather_nd((3, 2, 2), (2, 2), [[0, 1], [1, 0]])
     verify_gather_nd((3, 2), (2, 2, 3), [[[0, 1, 2], [2, 0, 1]], [[0, 0, 0], [1, 1, 1]]])
 
+
 def test_random_uniform():
-    def verify_random_uniform(shape, minval, maxval, dtype, seed, name):
+    def verify_random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=None):
         x = relay.random_uniform(shape, minval, maxval, dtype, seed, name)
         func = relay.Function([], x)
         for target, ctx in ctx_list():
             for kind in ["graph", "debug"]:
                 intrp = relay.create_executor(kind, ctx=ctx, target=target)
-                print(str(func))
-                print(x)
                 op_res = intrp.evaluate(func)()
-                print(op_res)
+                na = op_res.asnumpy()
+                minval1, maxval1 = minval, maxval
 
-    # Uncomment the following test case to check that we raise error for integral values when dtype is integer
-    # verify_random_uniform((1024, 1024), minval=-3, maxval=None, dtype="int32", seed=0, name="")
+                if minval is None:
+                    if dtype.startswith("int"):
+                        minval1 = 0
+                    else:
+                        minval1 = 0.0
 
-    # Uncomment the following test case to check that we raise error for integer values
-    # when (maxval-minval == 1) as maxval range is exclusive and we always check that (high > low)
-    # verify_random_uniform((1024, 1024), minval=None, maxval=None, dtype="int64", seed=3, name="")
+                if maxval is None and dtype.startswith("float"):
+                    maxval1 = 1.0
+                assert abs(np.min(na) - minval1) < 1e-3
+                if dtype.startswith("int"):
+                    maxval1 = maxval -1
+                assert abs(np.max(na) - maxval1) < 1e-3
 
     verify_random_uniform((1024, 1024), -1, 1, "int32", 3, "")
     verify_random_uniform((1024, 1024), minval=None, maxval=2, dtype="int64", seed=3, name="")
@@ -726,6 +732,7 @@ def test_random_uniform():
 
     verify_random_uniform((1024, 1024), -3, 5, "int64", 1, "")
     verify_random_uniform((1024, 1024), -3, 5, "int32", 1, "")
+
 if __name__ == "__main__":
     test_arange()
     test_cast()

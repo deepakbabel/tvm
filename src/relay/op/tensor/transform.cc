@@ -2723,29 +2723,31 @@ RELAY_REGISTER_OP("one_hot")
 //randomuniform operator
 TVM_REGISTER_NODE_TYPE(RandomUniformAttrs);
 
+//Relation for RandomUniform
 bool RandomUniformRel(  const Array<Type>& types,
                         int num_inputs,
                         const Attrs& raw_attrs,
-                        const TypeReporter& reporter) {  
+                        const TypeReporter& reporter) {
   CHECK_EQ(types.size(), 3);
   const RandomUniformAttrs* attrs = raw_attrs.as<RandomUniformAttrs>();
   reporter->Assign(types[2], TensorTypeNode::make(attrs->shape, attrs->dtype));
   return true;
 }
 
+//Compute description for RandomUniform
 Array<Tensor> RandomUniformCompute(const Attrs& attrs,
                             const Array<Tensor>& inputs,
                             const Type& out_type,
-                            const Target& target) {    
-  
+                            const Target& target) {
   const RandomUniformAttrs* param = attrs.as<RandomUniformAttrs>();
-  CHECK(param != nullptr);  
+  CHECK(param != nullptr);
   return Array<Tensor> {
     topi::random_uniform(param->shape, inputs[0](), inputs[1](), param->dtype,
     param->seed, param->name)
   };
 }
 
+//make call node for RandomUniform
 Expr MakeRandomUniform( Array<IndexExpr> shape,
                         Expr minval,
                         Expr maxval,
@@ -2753,7 +2755,7 @@ Expr MakeRandomUniform( Array<IndexExpr> shape,
                         int seed,
                         std::string name="") {
   auto attrs = make_node<RandomUniformAttrs>();
-  attrs->shape = std::move(shape);  
+  attrs->shape = std::move(shape);
   attrs->dtype = std::move(dtype);
   attrs->seed = seed;
   attrs->name = std::move(name);
@@ -2773,10 +2775,7 @@ RELAY_REGISTER_OP("random_uniform")
 .set_support_level(3)
 .add_type_rel("RandomUniform", RandomUniformRel)
 .set_attr<FTVMCompute>("FTVMCompute", RandomUniformCompute)
-// .set_attr<TOpPattern>("TOpPattern", kInjective);
-.set_attr<TOpPattern>("TOpPattern", kOpaque)
-.set_attr<AnyCodegenStrategy>("AnyCodegenStrategy", kVariableDimensions);
-
+.set_attr<TOpPattern>("TOpPattern", kOpaque);
 
 }  // namespace relay
 }  // namespace tvm
