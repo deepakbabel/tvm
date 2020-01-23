@@ -693,7 +693,10 @@ def test_random_uniform():
     def verify_random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=None):
         x = relay.random_uniform(shape, minval, maxval, dtype, seed, name)
         func = relay.Function([], x)
-        for target, ctx in ctx_list():
+        device_list = ["llvm"]
+        res = [(device, tvm.context(device, 0)) for device in device_list]
+        ctx_list_local = [x for x in res if x[1].exist]
+        for target, ctx in ctx_list_local:
             for kind in ["graph", "debug"]:
                 intrp = relay.create_executor(kind, ctx=ctx, target=target)
                 op_res = intrp.evaluate(func)()

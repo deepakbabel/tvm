@@ -601,7 +601,7 @@ def verify_random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=No
             maxval1 = maxval - 1
         assert abs(np.max(na) - maxval1) < 1e-3
 
-    for device in get_all_backend():
+    for device in ['llvm', 'llvm -device=arm_cpu']:
         check_device(device)
 
 
