@@ -46,7 +46,7 @@ using namespace topi::detail;
 */
 inline tvm::Array<Tensor>
 random_uniform(const Array<Expr>& shape, const Expr& minval,
-               const Expr& maxval, Type dtype, Integer seed,
+               const Expr& maxval, DataType dtype, Integer seed,
                std::string name = "random.uniform") {
   CHECK(dtype.is_float() || dtype.is_int());
 

@@ -1311,7 +1311,7 @@ inline Tensor one_hot(const Tensor& indices,
 inline Array<Tensor> random_uniform(const Array<Expr>& shape,
                                     const Expr& minval,
                                     const Expr& maxval,
-                                    Type dtype,
+                                    DataType dtype,
                                     Integer seed,
                                     std::string name = "random.uniform") {
   auto mm = topi::contrib::random_uniform
