@@ -21,7 +21,6 @@ import tvm
 import topi
 from . import cpp
 from . import tag
-from tvm.contrib import random
 from .util import within_index, make_idx
 
 
@@ -457,26 +456,28 @@ def arange(start, stop=None, step=1, dtype="float32"):
     return cpp.arange(start, stop, step, dtype)
 
 
-def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, name=""):
-    """Return pseudo random numbers from a uniform distribution within a given interval[minval,maxval).
+def random_uniform(req_shape, minval=0, maxval=None, dtype="float32", seed=None, name=""):
+    """Return pseudo random numbers from a uniform distribution in a given interval[minval,maxval).
 
     .. note::
         Similar to ``tf.random.uniform``
 
     Parameters
     ----------
-    shape:
+    req_shape: The shape of the output tensor array.
 
     minval : tvm.Expr, optional
         low bound of interval. The interval includes this value. The default start
         value is 0.0.
 
     maxval : tvm.Expr
-        upper bound of interval. The interval does not include this value. Default value is 1.0 for floats.
-        For integers, if maxval is not specified, then raises error
+        upper bound of interval. The interval does not include this value.
+        Default value is 1.0 for floats. For integers, if maxval is not specified,
+        then raises ValueError
 
     seed : integer, optional
-        Helpful in generating repetitive pseudo random sequences. The default seed is 0 means random sequence.
+        Helpful in generating repetitive pseudo random sequences.
+        The default seed is 0 means random sequence.
 
     dtype : str, optional
         The target data type.
@@ -500,7 +501,7 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
         dtype = "float32"
 
     if maxval is None:
-        if (dtype.find("float") != -1):
+        if dtype.find("float") != -1:
             maxval = tvm.const(1, dtype)
         else:
             raise ValueError("maxval should be specified for integer datatype")
@@ -512,7 +513,7 @@ def random_uniform(shape, minval=0, maxval=None, dtype="float32", seed=None, nam
     else:
         minval = tvm.const(minval, dtype=dtype)
 
-    return cpp.random_uniform(shape, minval, maxval, dtype, seed, name)
+    return cpp.random_uniform(req_shape, minval, maxval, dtype, seed, name)
 
 
 def repeat(a, repeats, axis):
