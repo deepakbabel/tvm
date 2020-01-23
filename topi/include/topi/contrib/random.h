@@ -21,8 +21,8 @@
  * \brief External function interface to cuBLAS libraries
  * \file cublas.h
  */
-#ifndef TVM_TOPI_INCLUDE_TOPI_CONTRIB_RANDOM_H_
-#define TVM_TOPI_INCLUDE_TOPI_CONTRIB_RANDOM_H_
+#ifndef TOPI_CONTRIB_RANDOM_H_
+#define TOPI_CONTRIB_RANDOM_H_
 
 #include <string>
 #include "tvm/operation.h"
@@ -94,4 +94,4 @@ random_uniform(const Array<Expr>& shape, const Expr& minval,
 }  // namespace contrib
 }  // namespace topi
 
-#endif  // TVM_TOPI_INCLUDE_TOPI_CONTRIB_RANDOM_H_
+#endif  // TOPI_CONTRIB_RANDOM_H_
