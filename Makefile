@@ -133,4 +133,3 @@ jvminstall:
 # clean rule
 clean:
 	@mkdir -p build && cd build && cmake .. && $(MAKE) clean
-	
