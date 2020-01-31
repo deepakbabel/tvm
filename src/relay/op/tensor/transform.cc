@@ -38,7 +38,7 @@
 #include "../../../arithmetic/compute_expr.h"
 #include "../../pass/infer_layout_util.h"
 #include "../../pass/pattern_util.h"
-#include "./transform.h"
+#include "transform.h"
 
 namespace tvm {
 namespace relay {
