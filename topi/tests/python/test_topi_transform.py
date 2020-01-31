@@ -557,15 +557,11 @@ def fun1(A, shape, pdtype):
         print("Running on target: %s" % device)
         with tvm.target.create(device):
             s = topi.generic.schedule_extern(A)
-            # "rocm", target_host = "llvm", name = "conv2d")
-            # s = topi.generic.schedule_injective(A)
-        # f = tvm.build(s, [A], "cpu", "llvm", device)
         f = tvm.build(s, A, device)
         a_nd = tvm.nd.array(np.zeros((shape[0], shape[1]), dtype=pdtype), ctx)
         print(pdtype)
         f(a_nd)
         print(a_nd)
-        # tvm.testing.assert_allclose(a_nd.asnumpy(), a_np)
 
     for device in get_all_backend():
         check_device(device)
