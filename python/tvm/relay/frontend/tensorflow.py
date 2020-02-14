@@ -1570,6 +1570,7 @@ _convert_map = {
     'Where'                             : _where(),
     'ZerosLike'                         : AttrCvt('zeros_like'),
     'RandomUniform'                     : _random_uniform(),
+
 }
 
 def _LSTMBlockCell():
