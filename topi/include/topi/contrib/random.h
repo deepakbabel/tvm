@@ -17,10 +17,6 @@
  * under the License.
  */
 
-/*!
- * \brief External function interface to cuBLAS libraries
- * \file cublas.h
- */
 #ifndef TOPI_CONTRIB_RANDOM_H_
 #define TOPI_CONTRIB_RANDOM_H_
 
