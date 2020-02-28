@@ -36,7 +36,7 @@
 #include <vector>
 #include "../op_common.h"
 #include "../../../arithmetic/compute_expr.h"
-#include "../../pass/alter_op_layout.h"
+#include "../../pass/infer_layout_util.h"
 #include "../../pass/pattern_util.h"
 #include "transform.h"
 
@@ -852,8 +852,8 @@ bool ArgWhereRel(const Array<Type>& types,
   const auto& input_rank = input_shape.size();
   std::vector<IndexExpr> result_shape;
   result_shape.push_back(Any::make());
-  result_shape.push_back(IntImm::make(Int(32), input_rank));
-  reporter->Assign(types[1], TensorTypeNode::make(result_shape, Int(32)));
+  result_shape.push_back(IntImm::make(DataType::Int(32), input_rank));
+  reporter->Assign(types[1], TensorTypeNode::make(result_shape, DataType::Int(32)));
   return true;
 }
 
@@ -1216,8 +1216,11 @@ bool ArangeRel(const Array<Type>& types,
   }
 }
 
-inline Tensor DynamicArange(const tvm::Tensor& start, const tvm::Tensor& stop,
-                            const tvm::Tensor& step, tvm::Type dtype, std::string name = "tensor",
+inline Tensor DynamicArange(const tvm::Tensor& start,
+                            const tvm::Tensor& stop,
+                            const tvm::Tensor& step,
+                            tvm::DataType dtype,
+                            std::string name = "tensor",
                             std::string tag = topi::kInjective) {
   tvm::Expr num_elem = tvm::Var("num_elem");
   return tvm::compute({num_elem}, [&](const Array<tvm::Var>& indices) {
@@ -1933,7 +1936,7 @@ bool StridedSliceRel(const Array<Type>& types,
       slice_range = end_v - begin_v;
       step = stride_v;
     }
-    oshape[i] = make_const(dshape[i].type(), (slice_range + step - 1) / step);
+    oshape[i] = make_const(dshape[i].dtype(), (slice_range + step - 1) / step);
   }
   reporter->Assign(types[1], TensorTypeNode::make(oshape, data->dtype));
   return true;
@@ -2134,7 +2137,7 @@ bool SplitRel(const Array<Type>& types,
 
   if (const IntImm* sections = param->indices_or_sections.as<IntImm>()) {
     CHECK(reporter->Assert(indexmod(data->shape[axis],
-                                    sections->value) == make_zero(Int(64))))
+                                    sections->value) == make_zero(DataType::Int(64))))
         << "indices_or_sections need to be able to divide input.shape[axis]";
     std::vector<Type> fields;
     for (int i = 0; i < sections->value; ++i) {
@@ -2146,7 +2149,7 @@ bool SplitRel(const Array<Type>& types,
     reporter->Assign(types[1], TupleTypeNode::make(Array<Type>(fields)));
   } else {
     auto indices = param->indices_or_sections.as<ArrayNode>()->data;
-    auto begin = IndexExpr(make_zero(Int(32)));
+    auto begin = IndexExpr(make_zero(DataType::Int(32)));
     std::vector<Type> fields;
     for (unsigned int i = 0; i < indices.size(); ++i) {
       CHECK(reporter->Assert(Downcast<IndexExpr>(indices[i]) > begin))
@@ -2198,7 +2201,7 @@ Expr MakeSplit(Expr data,
 TVM_REGISTER_API("relay.op._make.split")
 .set_body([](const TVMArgs& args, TVMRetValue* rv) {
     if (args.type_codes[1] == kDLInt) {
-      *rv = MakeSplit(args[0], make_const(Int(64), int64_t(args[1])), args[2]);
+      *rv = MakeSplit(args[0], make_const(DataType::Int(64), int64_t(args[1])), args[2]);
     } else {
       *rv = MakeSplit(args[0], args[1], args[2]);
     }
@@ -2719,6 +2722,63 @@ RELAY_REGISTER_OP("one_hot")
 .add_type_rel("OneHot", OneHotRel)
 .set_attr<FTVMCompute>("FTVMCompute", OneHotCompute)
 .set_attr<TOpPattern>("TOpPattern", kOutEWiseFusable);
+
+// randomuniform operator
+TVM_REGISTER_NODE_TYPE(RandomUniformAttrs);
+
+// Relation for RandomUniform
+bool RandomUniformRel(const Array<Type>& types,
+                      int num_inputs,
+                      const Attrs& raw_attrs,
+                      const TypeReporter& reporter) {
+  CHECK_EQ(types.size(), 3);
+  const RandomUniformAttrs* attrs = raw_attrs.as<RandomUniformAttrs>();
+  reporter->Assign(types[2], TensorTypeNode::make(attrs->shape, attrs->dtype));
+  return true;
+}
+
+// Compute description for RandomUniform
+Array<Tensor> RandomUniformCompute(const Attrs& attrs,
+                            const Array<Tensor>& inputs,
+                            const Type& out_type,
+                            const Target& target) {
+  const RandomUniformAttrs* param = attrs.as<RandomUniformAttrs>();
+  CHECK(param != nullptr);
+  return Array<Tensor> {
+    topi::random_uniform(param->shape, inputs[0](), inputs[1](), param->dtype,
+    param->seed, param->name)
+  };
+}
+
+// make call node for RandomUniform
+Expr MakeRandomUniform(Array<IndexExpr> shape,
+                       Expr minval,
+                       Expr maxval,
+                       DataType dtype,
+                       int seed,
+                       std::string name = "") {
+  auto attrs = make_node<RandomUniformAttrs>();
+  attrs->shape = std::move(shape);
+  attrs->dtype = std::move(dtype);
+  attrs->seed = seed;
+  attrs->name = std::move(name);
+  static const Op& op = Op::Get("random_uniform");
+  return CallNode::make(op, {minval, maxval}, Attrs(attrs), {});
+}
+
+TVM_REGISTER_API("relay.op._make.random_uniform")
+.set_body_typed(MakeRandomUniform);
+
+RELAY_REGISTER_OP("random_uniform")
+.describe(R"code(Returns evenly spaced values within a given interval.
+
+)code" TVM_ADD_FILELINE)
+.set_attrs_type<RandomUniformAttrs>()
+.set_num_inputs(2)
+.set_support_level(3)
+.add_type_rel("RandomUniform", RandomUniformRel)
+.set_attr<FTVMCompute>("FTVMCompute", RandomUniformCompute)
+.set_attr<TOpPattern>("TOpPattern", kOpaque);
 
 }  // namespace relay
 }  // namespace tvm

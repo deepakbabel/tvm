@@ -71,6 +71,7 @@
 #include <topi/rocm/reduction.h>
 #include <topi/rocm/softmax.h>
 #include <topi/rocm/normalization.h>
+#include <topi/contrib/random.h>
 
 namespace topi {
 
@@ -448,6 +449,14 @@ TVM_REGISTER_GLOBAL("topi.one_hot")
   DataType dtype = args[5];
   *rv = one_hot(args[0], args[1], args[2], depth, axis, dtype);
   });
+
+TVM_REGISTER_GLOBAL("topi.random_uniform")
+.set_body([](TVMArgs args, TVMRetValue *rv) {
+  DataType dtype = args[3];
+  int seed = args[4];
+  std::string name = args[5];
+  *rv = random_uniform(args[0], args[1], args[2], dtype, seed, name);
+});
 
 /* Ops from nn/upsampling.h */
 TVM_REGISTER_GLOBAL("topi.nn.upsampling")
@@ -839,7 +848,7 @@ using FTVMDenseOpBuilder = std::function<tvm::Tensor(const Target& target,
                                                      const tvm::Tensor& data,
                                                      const tvm::Tensor& weight,
                                                      const tvm::Tensor& bias,
-                                                     const Type& out_dtype)>;
+                                                     const DataType& out_dtype)>;
 
 /*!
 * \brief Helper function for registering dense ops matching the
@@ -856,7 +865,7 @@ inline PackedFunc WrapDenseOp(FTVMDenseOpBuilder builder) {
     Tensor data = args[0];
     Tensor weight = args[1];
     Tensor bias = args[2];
-    Type out_dtype = args[3];
+    DataType out_dtype = args[3];
 
     *ret = builder(target, data, weight, bias, out_dtype);
   });
@@ -867,7 +876,7 @@ TVM_REGISTER_GENERIC_FUNC(dense)
                             const tvm::Tensor& data,
                             const tvm::Tensor& weight,
                             const tvm::Tensor& bias,
-                            const Type& out_dtype) {
+                            const DataType& out_dtype) {
   return topi::nn::dense(data, weight, bias, out_dtype);
 }))
 .register_func({ "cuda", "gpu" }, WrapDenseOp(topi::cuda::dense_cuda))

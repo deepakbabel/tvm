@@ -29,6 +29,7 @@
 #include <tvm/build_module.h>
 #include <tvm/relay/type.h>
 #include <tvm/relay/expr.h>
+#include <string>
 
 namespace tvm {
 namespace relay {
@@ -104,6 +105,30 @@ using FTVMCompute = runtime::TypedPackedFunc<
                 const Target& target)>;
 
 /*!
+ * \brief Computation description interface.
+ *
+ * \note This function have a special convention
+ *  for functions with tuple input/output.
+ *
+ *  So far we restrict tuple support to the following case:
+ *  - Function which takes a single tuple as input.
+ *  - Function which outputs a single tuple.
+ *
+ *  In both cases, the tuple is flattened as array.
+ *
+ * \param attrs The attribute of the primitive
+ * \param inputs The input tensors.
+ * \param out_type The output type information
+ &                 these are always placeholders.
+ * \return The output compute description of the operator.
+ */
+using FTVMCompute1 = runtime::TypedPackedFunc<
+  Tensor(const Attrs& attrs,
+         const Array<Tensor>& inputs,
+         const Type& out_type,
+         const Target& target)>;
+
+/*!
  * \brief Build the computation schedule for
  *  op whose root is at current op.
  *
@@ -132,6 +157,22 @@ using FTVMAlterOpLayout = runtime::TypedPackedFunc<
        const Array<Expr>& args,
        const Array<Tensor>& tinfos)>;
 
+/*!
+ * \brief Convert the layout of operators or replace the
+ *  operator with other expressions. This function will be invoked
+ *  in ConvertLayout pass.
+ * \param attrs The attribute of the original node.
+ * \param inputs The input symbols of the original node.
+ * \param tinfos An array of placeholders, use for getting the inferred shape
+ *               and dtype of the inputs.
+ * \param desired_layout The desired layout.
+ * \return new_expr The modified expression.
+ */
+using FTVMConvertOpLayout = runtime::TypedPackedFunc<
+  Expr(const Attrs& attrs,
+       const Array<Expr>& args,
+       const Array<Tensor>& tinfos,
+       const std::string& desired_layout)>;
 /*!
  * \brief Legalizes an expression with another expression. This function will be
  *  invoked in Legalize pass. It is a target-dependent pass.

@@ -71,10 +71,13 @@ This level enables typical convnet models.
    tvm.relay.nn.conv2d_transpose
    tvm.relay.nn.dense
    tvm.relay.nn.max_pool2d
+   tvm.relay.nn.max_pool3d
    tvm.relay.nn.avg_pool2d
+   tvm.relay.nn.avg_pool3d
    tvm.relay.nn.global_max_pool2d
    tvm.relay.nn.global_avg_pool2d
    tvm.relay.nn.upsampling
+   tvm.relay.nn.upsampling3d
    tvm.relay.nn.batch_flatten
    tvm.relay.nn.pad
    tvm.relay.nn.lrn
@@ -121,6 +124,7 @@ This level enables additional math and transform operators.
    tvm.relay.repeat
    tvm.relay.tile
    tvm.relay.reverse
+   tvm.relay.random_uniform
 
 
 **Level 4: Broadcast and Reductions**
@@ -246,10 +250,13 @@ Level 2 Definitions
 .. autofunction:: tvm.relay.nn.conv2d_transpose
 .. autofunction:: tvm.relay.nn.dense
 .. autofunction:: tvm.relay.nn.max_pool2d
+.. autofunction:: tvm.relay.nn.max_pool3d
 .. autofunction:: tvm.relay.nn.avg_pool2d
+.. autofunction:: tvm.relay.nn.avg_pool3d
 .. autofunction:: tvm.relay.nn.global_max_pool2d
 .. autofunction:: tvm.relay.nn.global_avg_pool2d
 .. autofunction:: tvm.relay.nn.upsampling
+.. autofunction:: tvm.relay.nn.upsampling3d
 .. autofunction:: tvm.relay.nn.batch_flatten
 .. autofunction:: tvm.relay.nn.pad
 .. autofunction:: tvm.relay.nn.lrn
@@ -290,6 +297,7 @@ Level 3 Definitions
 .. autofunction:: tvm.relay.repeat
 .. autofunction:: tvm.relay.tile
 .. autofunction:: tvm.relay.reverse
+.. autofunction:: tvm.relay.random_uniform
 
 
 Level 4 Definitions
