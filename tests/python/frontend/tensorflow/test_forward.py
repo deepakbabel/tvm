@@ -36,6 +36,12 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables
 from tensorflow.python.ops import init_ops
+from tensorflow.python.framework import function
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import random_ops
+from tensorflow.core.protobuf import config_pb2
 from distutils.version import LooseVersion
 import tvm
 from tvm import te
@@ -1095,6 +1101,111 @@ def test_read_variable_op():
                                                          outputs=None)
 
         assert exexcinfo.value.args[0].startswith("Graph is not frozen. Provide a frozen graph.")
+
+        # Now convert the variables to constant and run inference on the converted graph
+        final_graph_def = tf.graph_util.convert_variables_to_constants(
+            sess,
+            sess.graph.as_graph_def(add_shapes=True),
+            out_node,
+        )
+
+        for device in ["llvm", "cuda"]:
+            ctx = tvm.context(device, 0)
+            if not ctx.exist:
+                print("Skip because %s is not enabled" % device)
+                continue
+
+            tvm_output = run_tvm_graph(final_graph_def, in_data, in_node,
+                                       target=device, out_names=out_name,
+                                       num_output=len(out_name))
+            for i in range(len(tf_output)):
+                tvm.testing.assert_allclose(
+                    tf_output[i], tvm_output[i], atol=1e-5, rtol=1e-5)
+
+        sess.close()
+
+
+def test_stateful_partitioned_op():
+    """ Stateful Partitioned op test """
+
+    tf.reset_default_graph()
+    data = np.random.uniform(size=(32, 100)).astype('float32')
+    input_tensor = array_ops.placeholder(shape=data.shape, dtype=data.dtype)
+    print(type(input_tensor))
+
+    size = input_tensor.shape.dims[1]
+    var_data = np.random.uniform(-5, 5, size=[size, size]).astype(np.float32)
+    input_var = tf.Variable(var_data, name='var1', use_resource=True)
+    print(type(input_var))
+    math_ops.matmul(input_tensor, input_var)
+
+    out_name = ['MatMul:0']
+    out_node = ['MatMul']
+    in_name = ['Placeholder:0']
+    in_node = ['Placeholder']
+    in_data = [data]
+
+    @function.Defun(*[dtypes.float32] * 2)
+    def FunctionWithStatefulOp(m, n):
+        with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+            mm = tf.Variable([1])
+            w = tf.random.uniform(shape=[4], maxval=10, dtype=tf.float32, seed = 10)
+            x = random_ops.random_uniform([4], maxval=10.0, dtype=dtypes.float32)
+        with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+            y = random_ops.random_uniform([4], maxval=10.0, dtype=dtypes.float32)
+            b = tf.random.uniform(shape=[4], maxval=10, dtype=tf.float32, seed = 10)
+        return w*x + b*y
+
+    # FunctionWithStatefulOp._signature.is_stateful = True
+
+    op = tf.raw_ops.StatefulPartitionedCall(args=[constant_op.constant(1.), constant_op.constant(2.)],
+                                            Tout=[dtypes.float32], f=FunctionWithStatefulOp)
+    print(op[0].op.name)
+
+    with tf.Session(config=config_pb2.ConfigProto(device_count={"CPU": 3})) as sess:
+        sess.run(variables.global_variables_initializer())
+        run_options = config_pb2.RunOptions(trace_level=config_pb2.RunOptions.FULL_TRACE)
+        run_metadata = config_pb2.RunMetadata()
+        print(sess.run(op, options=run_options, run_metadata=run_metadata))
+        """START of Negative test case scenario(SPOP operator containing Stateful ops)"""
+
+        isSubGraphStateful = False
+        print("Now check for device assignment")
+        assignedDevicesSet = set()
+        if(op[0].op.name == "StatefulPartitionedCall"):
+            for func in run_metadata.step_stats.dev_stats:
+                assignedDevicesSet.add(func.device)
+            if (len(assignedDevicesSet) > 1):
+                isSubGraphStateful = True
+                raise Exception(
+                    "Device assignment is not consistent. Rejecting the graph")
+            print("Now check for stateful bit")
+            # isSubGraphStateful =  bool(len(FunctionWithStatefulOp.stateful_ops)) or (FunctionWithStatefulOp.definition.signature.is_stateful)
+            for func in sess.graph._functions.keys():
+                if (isSubGraphStateful is False):
+                    isSubGraphStateful = isSubGraphStateful or bool(len(sess.graph._functions[func].stateful_ops)) or sess.graph._functions[func].definition.signature.is_stateful
+                else:
+                    raise Exception("TVM does not support StatefulPartitionedOp containing stateful operations. Rejecting the graph")
+        print(op)
+        """END of Negative test case scenario(SPOP operator containing Stateful ops)"""
+
+        final_graph_def = sess.graph.as_graph_def(add_shapes=True)
+        tf_output = run_tf_graph(sess, in_data, in_name, out_name)
+        print(final_graph_def)
+        # serialized = MessageToJson(final_graph_def.library.function)
+        # final_graph_def.library.function = MessageToDict(final_graph_def.library.function,preserving_proto_field_name = True)
+        # desired_res = final_graph_def.library.function["signature"]
+        # print(desired_res)
+
+
+        shape_dict = {e: i.shape for e, i in zip(in_name, in_data)}
+        with pytest.raises(Exception) as execinfo:
+            mod, params = relay.frontend.from_tensorflow(final_graph_def,
+                                                         layout=None,
+                                                         shape=shape_dict,
+                                                         outputs=None)
+
+        assert execinfo.value.args[0].startswith("Graph is not frozen. Provide a frozen graph.")
 
         # Now convert the variables to constant and run inference on the converted graph
         final_graph_def = tf.graph_util.convert_variables_to_constants(
@@ -3203,3 +3314,4 @@ if __name__ == '__main__':
 
     # Internal misc. ops
     test_read_variable_op()
+    test_stateful_partitioned_op()
