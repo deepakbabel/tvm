@@ -41,6 +41,7 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import random_ops
+from tensorflow.python.ops import functional_ops
 from tensorflow.core.protobuf import config_pb2
 from distutils.version import LooseVersion
 import tvm
@@ -3191,6 +3192,22 @@ def test_forward_dilation():
     _test_dilation2d([1, 224, 224, 10], [8, 8, 10], [1, 3, 1, 1], [1, 1, 1, 1], "SAME")
     _test_dilation2d([1, 3, 3, 1], [2, 2, 1], [1, 1, 1, 1], [1, 2, 2, 1], "SAME")
     _test_dilation2d([1, 3, 3, 1], [2, 2, 1], [1, 1, 1, 1], [1, 1, 2, 1], "VALID")
+
+
+def test_spop():
+
+    with tf.Graph().as_default():
+        @function.Defun(*[dtypes.float32] * 2)
+        def func1(x, y):
+            return math_ops.multiply(x, y)
+
+        tensors = functional_ops.partitioned_call(
+            args=[constant_op.constant(1.),
+                  constant_op.constant(2.)], f=func1)
+
+        compare_tf_with_tvm([], [], 'PartitionedCall:0')
+
+
 
 # #######################################################################
 # Main

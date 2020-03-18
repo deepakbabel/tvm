@@ -1590,6 +1590,18 @@ def _add_n():
     return _impl
 
 
+def _partitioned_call():
+    def _impl(inputs, attr, params):
+        if not isinstance(inputs, tuple):
+            inputs = list(inputs)
+        assert len(inputs) > 0, "add_n take >=1 inputs, but 0 given."
+        _res = inputs[0]
+        for each in inputs[1:]:
+            _res = _op.add(_res, each)
+        return  _res
+    return _impl
+
+
 # compatible operators that do NOT require any conversion.
 _identity_list = []
 
@@ -1684,6 +1696,7 @@ _convert_map = {
     'NotEqual'                          : _broadcast('not_equal'),
     'OneHot'                            : _one_hot(),
     'Pack'                              : _pack(),
+    'PartitionedCall'                   : _partitioned_call(),
     'TensorArrayV3'                     : _tensor_array(),
     'TensorArrayScatterV3'              : _tensor_array_scatter(),
     'TensorArrayGatherV3'               : _tensor_array_gather(),
@@ -2241,8 +2254,9 @@ class GraphProto(object):
         self._branches = {}
         self._mod = IRModule({})
         self._prelude = Prelude(self._mod)
+        self._subgraphs = {}
 
-    def from_tensorflow(self, graph, layout="NHWC", shape=None, outputs=None):
+    def from_tensorflow(self, graph, layout="NHWC", shape=None, outputs=None, travesrse=False):
         """Construct relay nodes from tensorflow graph definition - GraphDef.
 
         Follow the tensorflow graph definition to parse and convert it to Relay.
@@ -2330,7 +2344,16 @@ class GraphProto(object):
                     warnings.warn("Ignore the passed shape. Shape in graphdef "
                                   "will be used for operator %s." % node.name)
 
-        # Parse the nodes to re-create TF graph using Relay operators.
+
+        f1 = graph.library.function[0]
+        if f1.signature.name not in self._subgraphs:
+            from tensorflow.python.framework import function_def_to_graph
+            sub = function_def_to_graph.function_def_to_graph_def(f1)
+            self._subgraphs.update({f1.signature.name: 'added'})
+            self._subgraphs.update({f1.signature.name: self.from_tensorflow(sub[0])})
+
+
+        # Parse the nodes to re-create TF graph using Relay operators
         for node in graph.node:
             # Tensorflow doesn't have separate list for params extraction.
             # Operator name 'Const' is treated as a parameter to build params dict.
@@ -2403,7 +2426,17 @@ class GraphProto(object):
                                                              attr,
                                                              control_flow_node_map)
                 else:
-                    op = self._convert_operator(node.op, inputs, attr, graph)
+                    if node.op == "PartitionedCall":
+                        f1 = self._subgraphs[attr["f"].name][0]["main"]
+                        wl = tvm.relay.var('partitioned_call')
+                        sb = tvm.relay.scope_builder.ScopeBuilder()
+                        sb.let(wl, f1)
+                        
+                        sb.ret(wl(*))
+                        op = sb.get()
+                    else:
+                        op = self._convert_operator(node.op, inputs, attr, graph)
+
 
                 # Check if op is converted to param
                 if isinstance(op, np.ndarray):
