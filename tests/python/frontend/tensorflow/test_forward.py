@@ -3197,16 +3197,21 @@ def test_forward_dilation():
 def test_spop():
 
     with tf.Graph().as_default():
+        out = math_ops.multiply(constant_op.constant(1.), constant_op.constant(2.))
+        compare_tf_with_tvm([], [], 'Mul:0')
+
         @function.Defun(*[dtypes.float32] * 2)
         def func1(x, y):
             return math_ops.multiply(x, y)
+
 
         tensors = functional_ops.partitioned_call(
             args=[constant_op.constant(1.),
                   constant_op.constant(2.)], f=func1)
 
-        compare_tf_with_tvm([], [], 'PartitionedCall:0')
 
+
+        compare_tf_with_tvm([], [], 'PartitionedCall:0', mode='vm')
 
 
 # #######################################################################

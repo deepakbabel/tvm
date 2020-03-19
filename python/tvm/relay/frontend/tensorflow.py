@@ -2345,12 +2345,13 @@ class GraphProto(object):
                                   "will be used for operator %s." % node.name)
 
 
-        f1 = graph.library.function[0]
-        if f1.signature.name not in self._subgraphs:
-            from tensorflow.python.framework import function_def_to_graph
-            sub = function_def_to_graph.function_def_to_graph_def(f1)
-            self._subgraphs.update({f1.signature.name: 'added'})
-            self._subgraphs.update({f1.signature.name: self.from_tensorflow(sub[0])})
+        if graph.library.function:
+            f1 = graph.library.function[0]
+            if f1.signature.name not in self._subgraphs:
+                from tensorflow.python.framework import function_def_to_graph
+                sub = function_def_to_graph.function_def_to_graph_def(f1)
+                self._subgraphs.update({f1.signature.name: 'started adding'})
+                self._subgraphs.update({f1.signature.name: self.from_tensorflow(sub[0])})
 
 
         # Parse the nodes to re-create TF graph using Relay operators
@@ -2428,12 +2429,15 @@ class GraphProto(object):
                 else:
                     if node.op == "PartitionedCall":
                         f1 = self._subgraphs[attr["f"].name][0]["main"]
+                        # add_one = tvm.relay.GlobalVar("add_one")
+                        # self._mod[add_one] = self._subgraphs[attr["f"].name][0]["main"]
                         wl = tvm.relay.var('partitioned_call')
                         sb = tvm.relay.scope_builder.ScopeBuilder()
                         sb.let(wl, f1)
-                        
-                        sb.ret(wl(*))
+
+                        sb.ret(wl(*inputs))
                         op = sb.get()
+
                     else:
                         op = self._convert_operator(node.op, inputs, attr, graph)
 
@@ -2542,9 +2546,9 @@ class GraphProto(object):
 
             array_ndim = len(np_array.shape)
             if array_ndim == 0:
-                new_array = np.empty([1], dtype=np_array.dtype)
-                new_array[0] = np_array
-                self._nodes[name] = [tvm.relay.const(new_array)]
+                # new_array = np.empty([1], dtype=np_array.dtype)
+                # new_array[0] = np_array
+                self._nodes[name] = [tvm.relay.const(np_array)]
             else:
                 self._params[name] = tvm.nd.array(np_array)
                 self._nodes[name] = [_expr.var(name,
