@@ -1,4 +1,5 @@
 # Licensed to the Apache Software Foundation (ASF) under one
+# Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
 # regarding copyright ownership.  The ASF licenses this file
@@ -1137,7 +1138,6 @@ def test_read_variable_op():
 
 def test_stateful_partitioned_op():
     """ Stateful Partitioned op test """
-    # self.assertEqual([], APlus2B.stateful_ops)
     tf.reset_default_graph()
     data = np.random.uniform(size=(32, 100)).astype('float32')
     input_tensor = array_ops.placeholder(shape=data.shape, dtype=data.dtype)
@@ -1166,8 +1166,6 @@ def test_stateful_partitioned_op():
             b = tf.random.uniform(shape=[4], maxval=10, dtype=tf.float32, seed = 10)
         print(type(w*x))
         return w*x + b*y
-
-    # FunctionWithStatefulOp._signature.is_stateful = True
 
     op = tf.raw_ops.StatefulPartitionedCall(args=[constant_op.constant(1.), constant_op.constant(2.)],
                                             Tout=[dtypes.float32], f=FunctionWithStatefulOp)
@@ -3205,47 +3203,60 @@ def test_forward_dilation():
     _test_dilation2d([1, 3, 3, 1], [2, 2, 1], [1, 1, 1, 1], [1, 1, 2, 1], "VALID")
 
 def test_spop():
-    # data = np.random.uniform(0, 5, size=input_shape).astype(dtype)
-    data = np.random.uniform(size=(1, 224, 224, 3)).astype('float32')
-
     with tf.Graph().as_default():
-        # Case 0
+        # data = np.random.uniform(size=(1, 224, 224, 3)).astype('float32')
+        # # Case 0
         # a = None
-        # @function.Defun(*[dtypes.float32] * 10)
-        # def tfExample(x):
-        #     nonlocal  a
-        #     n_features = 10
-        #     n_dense_neurons = 3
-        #     x = tf.placeholder(tf.float32,(None,n_features))
-        #     W = tf.Variable(tf.ones([n_features,n_dense_neurons]))
-        #     b = tf.Variable(tf.ones([n_dense_neurons]))
+        # n_features = 10
+        # n_dense_neurons = 3
+        # x = tf.placeholder(tf.float32, (1, n_features))
+        # W = tf.Variable(tf.ones([n_features, n_dense_neurons]))
+        # W = tf.Variable(tf.ones([n_features, n_dense_neurons]))
+        # b = tf.Variable(tf.ones([n_dense_neurons]))
+        # @function.Defun()
+        # def tfExample():
         #     xW = tf.matmul(x,W)
         #     z = tf.add(xW,b)
         #     a = tf.sigmoid(z)
+        #     tp = type(a)
+        #     # return [a.fields[0].asnumpy()]
+        #     # return a.op.outputs
         #     return a
-        # # n_features = 10
-        # # x = tf.placeholder(tf.float32, (None, n_features))
-        # spop = tf.raw_ops.StatefulPartitionedCall(args=[np.random.random([1,n_features])],Tout=[dtypes.float32],f=tfExample)
+        #
+        # spop = tf.raw_ops.StatefulPartitionedCall(args=[],Tout=[dtypes.float32],f=tfExample)
         # init = tf.global_variables_initializer()
         # with tf.Session() as sess:
         #     sess.run(init)
-        #     print(sess.run(spop,feed_dict={x:np.random.random([1,n_features])}))
+        #     sess.run(spop,feed_dict={x:np.random.random([1,n_features])})
+            # print(sess.run(spop,feed_dict={"x:0":np.random.random([1,n_features])}))
+
         # Working Case I - START
-        # @function.Defun(*[dtypes.float32] * 2)
-        # def Body1(x, y):
-        #     # if x = 1, y = 2, ...
-        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
-        #         # a:= 1 + 1 = 2
-        #         a = x + x
-        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
-        #         # b:= 2 + 2 = 4
-        #         b = a + y
-        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
-        #         z = math_ops.multiply(a, b)
-        #     return z
-        #
-        # op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.), constant_op.constant(100.)],
-        #                                                 Tout=[dtypes.float32], f=Body1)
+
+
+        @function.Defun(*[dtypes.float32] * 1)
+        def Foo(x):
+            return x
+
+        @function.Defun(*[dtypes.float32] * 2)
+        def Body2(x, y):
+            return Foo(x)
+
+        @function.Defun(*[dtypes.float32] * 2)
+        def Body1(x, y):
+            # if x = 1, y = 2, ...
+            with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+                # a:= 1 + 1 = 2
+                # a = x + x
+                a = Foo(x)
+            with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+                # b:= 2 + 2 = 4
+                b = a + y
+            with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+                z = math_ops.multiply(a, b)
+            return z
+
+        op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.), constant_op.constant(100.)],
+                                                        Tout=[dtypes.float32], f=Body2)
         # # Working Case I - END
         #
         # # Working Case II - START
@@ -3320,17 +3331,16 @@ def test_spop():
         # op = gen_functional_ops.StatefulPartitionedCall(args=[data], Tout=[dtypes.float32], f=test_forward_placeholder_test)
         # Working Case III - END
 
-        # @function.Defun(*[dtypes.float32] * 1)
-        # def FunctionWithStatelessOp(x):
+        # @function.Defun()
+        # def FunctionWithStatelessOp():
         #     return constant_op.constant(4.0)
         #
-        # @function.Defun(*[dtypes.float32] * 1)
-        # def FunctionWithStatelessFunctionCall(x):
-        #     return constant_op.constant(4.0)
-        #     # return FunctionWithStatelessOp(4.0)
+        # @function.Defun()
+        # def foo():
+        #     # return constant_op.constant(4.0)
+        #     return FunctionWithStatelessOp()
         #
-        # op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.)], Tout=[dtypes.float32], f=FunctionWithStatelessFunctionCall)
-
+        # op = gen_functional_ops.StatefulPartitionedCall(args=[], Tout=[dtypes.float32], f=foo)
 
         #NON WORKING CASE II - START
         # out = math_ops.multiply(constant_op.constant(1.), constant_op.constant(2.))

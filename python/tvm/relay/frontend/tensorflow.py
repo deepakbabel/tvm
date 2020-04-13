@@ -2256,6 +2256,8 @@ class GraphProto(object):
         self._mod = IRModule({})
         self._prelude = Prelude(self._mod)
         self._subgraphs = {}
+        self.libFuncs = []
+        self.libFuncsDict = {}
 
     def from_tensorflow(self, graph, layout="NHWC", shape=None, outputs=None, travesrse=False):
         """Construct relay nodes from tensorflow graph definition - GraphDef.
@@ -2345,15 +2347,29 @@ class GraphProto(object):
                     warnings.warn("Ignore the passed shape. Shape in graphdef "
                                   "will be used for operator %s." % node.name)
 
+        # if graph.library.function:
+        #     f1 = graph.library.function[0]
+        #     if f1.signature.name not in self._subgraphs:
+        #         from tensorflow.python.framework import function_def_to_graph
+        #         sub = function_def_to_graph.function_def_to_graph_def(f1)
+        #         self._subgraphs.update({f1.signature.name: 'started adding'})
+        #         self._subgraphs.update({f1.signature.name: self.from_tensorflow(sub[0])})
 
-        if graph.library.function:
-            f1 = graph.library.function[0]
-            if f1.signature.name not in self._subgraphs:
-                from tensorflow.python.framework import function_def_to_graph
-                sub = function_def_to_graph.function_def_to_graph_def(f1)
-                self._subgraphs.update({f1.signature.name: 'started adding'})
-                self._subgraphs.update({f1.signature.name: self.from_tensorflow(sub[0])})
+        if graph.library.function and not self.libFuncs:
+            for func in graph.library.function:
+                self.libFuncs.append(func.signature.name)
 
+        if graph.library.function and not self.libFuncsDict:
+            for func in graph.library.function:
+                if func.signature.name not in self._subgraphs:
+                    from tensorflow.python.framework import function_def_to_graph
+                    sub = function_def_to_graph.function_def_to_graph_def(func)
+                    self.libFuncsDict[func.signature.name] = sub[0]
+            for func in self.libFuncsDict:
+                self._subgraphs.update({func: 'started adding'})
+                self._subgraphs.update({func: self.from_tensorflow(self.libFuncsDict[func])})
+
+                    # self._subgraphs.update({func.signature.name: self.from_tensorflow(sub[0])})
 
         # Parse the nodes to re-create TF graph using Relay operators
         for node in graph.node:
@@ -2438,7 +2454,17 @@ class GraphProto(object):
 
                         sb.ret(wl(*inputs))
                         op = sb.get()
+                    elif node.op in self.libFuncs:
+                        f1 = self._subgraphs[attr["f"].name][0]["main"]
+                        # add_one = tvm.relay.GlobalVar("add_one")
+                        # self._mod[add_one] = self._subgraphs[attr["f"].name][0]["main"]
+                        wl = tvm.relay.var('partitioned_call')
+                        sb = tvm.relay.scope_builder.ScopeBuilder()
+                        sb.let(wl, f1)
 
+                        sb.ret(wl(*inputs))
+                        op = sb.get()
+                        pass
                     else:
                         op = self._convert_operator(node.op, inputs, attr, graph)
 
@@ -2514,6 +2540,8 @@ class GraphProto(object):
             if node.op == "Placeholder" or node.op == 'PlaceholderWithDefault':
                 pass
             elif node.op == "Const":
+                pass
+            elif node.op in self.libFuncs:
                 pass
             else:
                 if any([node.op in t for t in [_identity_list, _convert_map,
