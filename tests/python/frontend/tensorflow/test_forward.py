@@ -42,7 +42,16 @@ from tensorflow.python.framework import ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import functional_ops
+from tensorflow.python.ops import gen_functional_ops
+from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.ops import variable_scope
+from tensorflow.python.ops import variables
 from tensorflow.core.protobuf import config_pb2
+from tensorflow.python.client import session
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import variables
+from tensorflow.python.ops import state_ops
 from distutils.version import LooseVersion
 import tvm
 from tvm import te
@@ -1128,7 +1137,7 @@ def test_read_variable_op():
 
 def test_stateful_partitioned_op():
     """ Stateful Partitioned op test """
-
+    # self.assertEqual([], APlus2B.stateful_ops)
     tf.reset_default_graph()
     data = np.random.uniform(size=(32, 100)).astype('float32')
     input_tensor = array_ops.placeholder(shape=data.shape, dtype=data.dtype)
@@ -1155,6 +1164,7 @@ def test_stateful_partitioned_op():
         with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
             y = random_ops.random_uniform([4], maxval=10.0, dtype=dtypes.float32)
             b = tf.random.uniform(shape=[4], maxval=10, dtype=tf.float32, seed = 10)
+        print(type(w*x))
         return w*x + b*y
 
     # FunctionWithStatefulOp._signature.is_stateful = True
@@ -1168,8 +1178,11 @@ def test_stateful_partitioned_op():
         run_options = config_pb2.RunOptions(trace_level=config_pb2.RunOptions.FULL_TRACE)
         run_metadata = config_pb2.RunMetadata()
         print(sess.run(op, options=run_options, run_metadata=run_metadata))
+        final_graph_def = sess.graph.as_graph_def(add_shapes=True)
+        tf_output = run_tf_graph(sess, in_data, in_name, out_name)
         """START of Negative test case scenario(SPOP operator containing Stateful ops)"""
-
+        stateful_ops = [(op.name, op.type) for op in sess.graph.get_operations() if op.op_def.is_stateful]
+        print(stateful_ops)
         isSubGraphStateful = False
         print("Now check for device assignment")
         assignedDevicesSet = set()
@@ -1178,26 +1191,24 @@ def test_stateful_partitioned_op():
                 assignedDevicesSet.add(func.device)
             if (len(assignedDevicesSet) > 1):
                 isSubGraphStateful = True
-                raise Exception(
-                    "Device assignment is not consistent. Rejecting the graph")
+                raise Exception("Device assignment is not consistent. Rejecting the graph")
             print("Now check for stateful bit")
-            # isSubGraphStateful =  bool(len(FunctionWithStatefulOp.stateful_ops)) or (FunctionWithStatefulOp.definition.signature.is_stateful)
-            for func in sess.graph._functions.keys():
-                if (isSubGraphStateful is False):
-                    isSubGraphStateful = isSubGraphStateful or bool(len(sess.graph._functions[func].stateful_ops)) or sess.graph._functions[func].definition.signature.is_stateful
-                else:
-                    raise Exception("TVM does not support StatefulPartitionedOp containing stateful operations. Rejecting the graph")
+            # for func in sess.graph._functions.keys():
+            if (isSubGraphStateful is False):
+                # isSubGraphStateful = isSubGraphStateful or bool(len(sess.graph._functions[func].stateful_ops)) or sess.graph._functions[func].definition.signature.is_stateful
+                isSubGraphStateful = isSubGraphStateful or bool(len(stateful_ops))
+            else:
+                raise Exception("TVM does not support StatefulPartitionedOp containing stateful operations. Rejecting the graph")
         print(op)
         """END of Negative test case scenario(SPOP operator containing Stateful ops)"""
 
-        final_graph_def = sess.graph.as_graph_def(add_shapes=True)
-        tf_output = run_tf_graph(sess, in_data, in_name, out_name)
+        # final_graph_def = sess.graph.as_graph_def(add_shapes=True)
+        # tf_output = run_tf_graph(sess, in_data, in_name, out_name)
         print(final_graph_def)
         # serialized = MessageToJson(final_graph_def.library.function)
         # final_graph_def.library.function = MessageToDict(final_graph_def.library.function,preserving_proto_field_name = True)
         # desired_res = final_graph_def.library.function["signature"]
         # print(desired_res)
-
 
         shape_dict = {e: i.shape for e, i in zip(in_name, in_data)}
         with pytest.raises(Exception) as execinfo:
@@ -3193,28 +3204,155 @@ def test_forward_dilation():
     _test_dilation2d([1, 3, 3, 1], [2, 2, 1], [1, 1, 1, 1], [1, 2, 2, 1], "SAME")
     _test_dilation2d([1, 3, 3, 1], [2, 2, 1], [1, 1, 1, 1], [1, 1, 2, 1], "VALID")
 
-
 def test_spop():
+    # data = np.random.uniform(0, 5, size=input_shape).astype(dtype)
+    data = np.random.uniform(size=(1, 224, 224, 3)).astype('float32')
 
     with tf.Graph().as_default():
-        out = math_ops.multiply(constant_op.constant(1.), constant_op.constant(2.))
-        compare_tf_with_tvm([], [], 'Mul:0')
+        # Case 0
+        # a = None
+        # @function.Defun(*[dtypes.float32] * 10)
+        # def tfExample(x):
+        #     nonlocal  a
+        #     n_features = 10
+        #     n_dense_neurons = 3
+        #     x = tf.placeholder(tf.float32,(None,n_features))
+        #     W = tf.Variable(tf.ones([n_features,n_dense_neurons]))
+        #     b = tf.Variable(tf.ones([n_dense_neurons]))
+        #     xW = tf.matmul(x,W)
+        #     z = tf.add(xW,b)
+        #     a = tf.sigmoid(z)
+        #     return a
+        # # n_features = 10
+        # # x = tf.placeholder(tf.float32, (None, n_features))
+        # spop = tf.raw_ops.StatefulPartitionedCall(args=[np.random.random([1,n_features])],Tout=[dtypes.float32],f=tfExample)
+        # init = tf.global_variables_initializer()
+        # with tf.Session() as sess:
+        #     sess.run(init)
+        #     print(sess.run(spop,feed_dict={x:np.random.random([1,n_features])}))
+        # Working Case I - START
+        # @function.Defun(*[dtypes.float32] * 2)
+        # def Body1(x, y):
+        #     # if x = 1, y = 2, ...
+        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+        #         # a:= 1 + 1 = 2
+        #         a = x + x
+        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+        #         # b:= 2 + 2 = 4
+        #         b = a + y
+        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+        #         z = math_ops.multiply(a, b)
+        #     return z
+        #
+        # op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.), constant_op.constant(100.)],
+        #                                                 Tout=[dtypes.float32], f=Body1)
+        # # Working Case I - END
+        #
+        # # Working Case II - START
+        # @function.Defun(*[dtypes.float32] * 2)
+        # def Body1(x, y):
+        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+        #         # z = Body2
+        #         z = math_ops.multiply(x, y)
+        #         i = 0
+        #         while i<10 :
+        #             i +=1
+        #             z = math_ops.multiply(x, y*i)
+        #     return z
+        #
+        # op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.), constant_op.constant(100.)],
+        #                                                 Tout=[dtypes.float32], f=Body1)
+        # # Working Case II - END
+        # # WSTART
+        # @function.Defun(*[dtypes.float32] * 2)
+        # def Body1(x, y):
+        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+        #         # z = Body2
+        #         z = math_ops.multiply(x, y)
+        #         i = 0
+        #         while i<10 :
+        #             i +=1
+        #             if i == 5:
+        #                 continue
+        #             z = math_ops.multiply(x, y*i)
+        #     return z
+        #
+        # # op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.), constant_op.constant(100.)],
+        # #                                                 Tout=[dtypes.float32], f=Body1)
+        # #WSTART
+        # @function.Defun(*[dtypes.float32] * 2)
+        # def Body1(x, y):
+        #
+        #     @function.Defun(capture_by_value=True)
+        #     def Body2():
+        #         return math_ops.multiply(x, y*i)
+        #     with ops.device("/job:localhost/replica:0/task:0/device:CPU:0"):
+        #         # z = Body2
+        #         i = 0
+        #         z = math_ops.multiply(x, y)
+        #         for i in range(0,10):
+        #             z = math_ops.multiply(x, y * 2)
+        #     return z
+        #
+        # op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.), constant_op.constant(100.)],
+        #                                                 Tout=[dtypes.float32], f=Body1)
 
-        @function.Defun(*[dtypes.float32] * 2)
-        def func1(x, y):
-            return math_ops.multiply(x, y)
+        # Working Case III - START
+        # @function.Defun(*[dtypes.float32] * 1)
+        # def test_forward_placeholder_test(x):
+        #     graph_def = tf_testing.get_workload("Custom/placeholder.pb")
+        #     # Call the utility to import the graph definition into default graph.
+        #     graph_def = tf_testing.ProcessGraphDefParam(graph_def)
+        #
+        #     # data = np.random.uniform(size=(1, 224, 224, 3)).astype('float32')
+        #     out_node = 'mul'
+        #     with tf.Session() as sess:
+        #         # Add shapes to the graph.
+        #         graph_def = tf_testing.AddShapesToGraphDef(sess, out_node)
+        #         tf_output = run_tf_graph(
+        #             sess, data, 'Placeholder:0', out_node + ':0')
+        #         print(tf_output)
+        #         tvm_output = run_tvm_graph(graph_def, data, 'Placeholder')
+        #         tvm.testing.assert_allclose(np.squeeze(tvm_output[0]), np.squeeze(tf_output[0]),
+        #                                     rtol=1e-5, atol=1e-5)
+        #     retVal = tf_output
+        #     return retVal
+        # op = gen_functional_ops.StatefulPartitionedCall(args=[data], Tout=[dtypes.float32], f=test_forward_placeholder_test)
+        # Working Case III - END
+
+        # @function.Defun(*[dtypes.float32] * 1)
+        # def FunctionWithStatelessOp(x):
+        #     return constant_op.constant(4.0)
+        #
+        # @function.Defun(*[dtypes.float32] * 1)
+        # def FunctionWithStatelessFunctionCall(x):
+        #     return constant_op.constant(4.0)
+        #     # return FunctionWithStatelessOp(4.0)
+        #
+        # op = gen_functional_ops.StatefulPartitionedCall(args=[constant_op.constant(32.)], Tout=[dtypes.float32], f=FunctionWithStatelessFunctionCall)
 
 
-        tensors = functional_ops.partitioned_call(
-            args=[constant_op.constant(1.),
-                  constant_op.constant(2.)], f=func1)
+        #NON WORKING CASE II - START
+        # out = math_ops.multiply(constant_op.constant(1.), constant_op.constant(2.))
+        # compare_tf_with_tvm([], [], 'Mul:0')
+        #
+        # @function.Defun(*[dtypes.float32] * 2)
+        # def func1(x, y):
+        #     return math_ops.multiply(x, y)
+        #
+        #
+        # tensors = functional_ops.partitioned_call(
+        #     args=[constant_op.constant(1.),
+        #           constant_op.constant(2.)], f=func1)
+        #WORKING CASE II- END
+        #CASE NON WORKING III - START
+        # asevop = testExtendWithStatefulOperations()
+        # run_options = config_pb2.RunOptions(trace_level=config_pb2.RunOptions.FULL_TRACE)
+        # run_metadata = config_pb2.RunMetadata()
+        # op = tf.raw_ops.StatefulPartitionedCall(args=[constant_op.constant(1.), constant_op.constant(2.)], Tout=[dtypes.float32], f=asevop)
+        compare_tf_with_tvm([], [], 'StatefulPartitionedCall:0', mode='vm')
+        # compare_tf_with_tvm([], [], 'StatefulPartitionedCall:0','out', mode='vm', init_global_variables=True)
 
-
-
-        compare_tf_with_tvm([], [], 'PartitionedCall:0', mode='vm')
-
-
-# #######################################################################
 # Main
 # ----
 if __name__ == '__main__':

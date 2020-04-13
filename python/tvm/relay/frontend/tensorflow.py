@@ -1697,6 +1697,7 @@ _convert_map = {
     'OneHot'                            : _one_hot(),
     'Pack'                              : _pack(),
     'PartitionedCall'                   : _partitioned_call(),
+    'StatefulPartitionedCall'           : _partitioned_call(),
     'TensorArrayV3'                     : _tensor_array(),
     'TensorArrayScatterV3'              : _tensor_array_scatter(),
     'TensorArrayGatherV3'               : _tensor_array_gather(),
@@ -2427,7 +2428,7 @@ class GraphProto(object):
                                                              attr,
                                                              control_flow_node_map)
                 else:
-                    if node.op == "PartitionedCall":
+                    if node.op in ["PartitionedCall", "StatefulPartitionedCall"]:
                         f1 = self._subgraphs[attr["f"].name][0]["main"]
                         # add_one = tvm.relay.GlobalVar("add_one")
                         # self._mod[add_one] = self._subgraphs[attr["f"].name][0]["main"]
